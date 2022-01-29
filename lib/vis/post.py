@@ -9,10 +9,10 @@ import sys
 import torch
 
 sys.path.append('../')
-from sci.lib.loader import * 
-from sci.lib.utils import *
-from sci.lib.vis import *
-from sci.lib.seq.models import *
+from lib.datasets import * 
+from lib.utils import *
+from lib.vis import *
+from lib.seq.models import *
 import sci.lib.seq.parser as wparse
 
 # SETTINGS

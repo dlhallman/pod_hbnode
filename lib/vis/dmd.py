@@ -4,8 +4,8 @@ import numpy as np
 import sys
 
 sys.path.append('../../')
-from sci.lib.loader import *
-from sci.lib.vis.reconstruct import *
+from lib.datasets import *
+from lib.vis.reconstruct import *
 
 
 # SETTINGS
