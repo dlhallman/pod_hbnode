@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from tqdm import trange
 import warnings
+
 warnings.filterwarnings('ignore')
 
 #PATH
@@ -19,6 +20,7 @@ from sci.lib.vis.post import *
 from sci.lib.vis.reconstruct import *
 from sci.lib.seq.models import *
 from sci.lib.seq.parser import *
+from sci.lib.vis.data import *
 
 
 def main(parse=None):
@@ -130,8 +132,12 @@ def main(parse=None):
     plot_NFE(args.out_dir+'/pth/{}.csv'.format(args.model),args)
     plot_Modes(DL, model, args)
     plot_ModesLong(DL, model, args)
-    plot_Reconstruction(DL, model, args)
-    plot_Anim(DL, model, args)
+    # plot_Reconstruction(DL, model, args)
+    # plot_Anim(DL, model, args)
+    eig_decay(DL, args)
+    predictions = model(DL.valid_times, DL.valid_data).cpu().detach().numpy()
+    val_recon = mode_to_true(DL,predictions,args)
+    data_reconstruct(val_recon,-1,args,heat=True)
 
 if __name__ == "__main__":
     main()

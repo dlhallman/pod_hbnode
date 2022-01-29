@@ -19,39 +19,6 @@ import sci.lib.seq.parser as wparse
 plt.rcParams['font.family'] = 'Times New Roman'
 DPI = 160
 
-def plot_PODecay(dataloader,args, perc = 99.99):
-    #INIT
-    DL = dataloader
-    total = DL.lv.sum()
-    data = []
-    cumulative = [0]
-
-    #ASSEMBLE EIGENVALUE DATA
-    for eig in DL.lv:
-        val = eig/total*100
-        if(val>100-perc):
-            cumulative = cumulative + [val+cumulative[-1]]
-    x = np.arange(0,len(cumulative)-1)
-
-    #PERCENTAGE PLOT
-    plt.figure(tight_layout=True, dpi=DPI)
-    plt.title(args.dataset+" POD Proportion")
-    plt.bar(x,cumulative[1:], color='black')
-    plt.xlabel('POD Mode')
-    plt.ylabel('Percentage')
-    plt.savefig(args.out_dir+'/podPercentage.pdf', format="pdf", bbox_inches="tight")
-
-    #CUMULATIVE PLOT
-    plt.figure(tight_layout=True, dpi=DPI)
-    plt.title(args.dataset+" POD Cumulative")
-    plt.plot(x,cumulative[:-1],'k')
-    plt.xlabel('POD Mode')
-    plt.ylabel('Cumulative Representation')
-    plt.savefig(args.out_dir+'/podCumulative.pdf', format="pdf", bbox_inches="tight")
-    
-    if args.verbose: plt.show()
-    return 1
-
 def plot_Modes(dataloader, model, args, show=False):
     DL = dataloader
     names = ['TRAIN', 'VALID', 'EVAL']

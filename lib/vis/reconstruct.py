@@ -1,5 +1,6 @@
 #IMPORTS
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
@@ -17,7 +18,128 @@ from sci.lib.seq.models import *
 import sci.lib.seq.parser as wparse
 
 
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 28
+plt.rcParams['xtick.minor.size'] = 0
+plt.rcParams['ytick.minor.size'] = 0
+DPI = 160
 
+#######################
+### RECONSTRUCTIONS ###
+#######################
+def mode_to_true(dataloader,modes, args):
+    DL = dataloader
+    spatial_modes = DL.spatial_modes
+    normalized = (modes*DL.std_data + DL.mean_data)
+    true = np.matmul(normalized, spatial_modes.T)
+
+    if args.dataset == "VKS":
+        if len(true.shape)>2:
+            true = true[-1]
+        pod_x = true[:, :DL.Nxy]
+        pod_y = true[:, DL.Nxy:]
+
+        shape = [true.shape[0], DL.data_init.shape[0], DL.data_init.shape[1]]
+        true_x = pod_x.reshape(pod_x.shape[0], shape[1], shape[2])
+        true_x = true_x.swapaxes(0,-1)
+        true_y = pod_y.reshape(pod_y.shape[0], shape[1], shape[2])
+        true_y = true_y.swapaxes(0,-1)
+
+        true = np.array([true_x,true_y])
+    return true.T
+
+def vks_reconstruct(data,time,axis,args,index=None,heat=None):
+
+    if heat:
+        kwargs = {'origin':'upper', 'vmin' :-.4, 'vmax' :.4}
+    else:
+        kwargs={}
+
+    if index is None:
+        axis.imshow(data[time,:,:].T, **kwargs)
+    else:
+        axis.imshow(data[time,:,:,index].T, cmap='jet', **kwargs)
+
+    return axis
+
+
+def kpp_reconstruct(data,time,axis,args,index=None,heat=None):
+    xv =  np.tile(np.linspace(-2,2,data.shape[0]),(data.shape[1],1))
+    yv = np.tile(np.linspace(-2.4,1.4,data.shape[1]),(data.shape[0],1)).T
+    axis.plot_surface(xv, yv, data[:,:,time], cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    return axis
+
+def ee_reconstruct(data,time,axis,index,args, heat=None):
+    x = np.linspace(-5,5,data.shape[1])
+    axis.plot(x,data[index,:,time], 'k')
+    return axis
+    
+
+######################
+##### ANIMATIONS #####
+######################
+
+def vks_animation(data,args):
+
+    fig, axes = plt.subplots(2,1, figsize=(5,10), tight_layout=True)
+    lines = []
+    for ax in axes.flatten():
+        lines = lines + [ax.imshow(np.zeros((data.shape[2],data.shape[1])), origin='upper', cmap='jet', vmin =-.4, vmax = .4)]
+
+    def run(vks_t):
+        lines[0].set_data(data[vks_t,:,:,0].T)
+        lines[1].set_data(data[vks_t,:,:,1].T)
+        return lines
+
+    ani = animation.FuncAnimation(fig, run, blit=True, interval=data.shape[0]-1,
+        repeat=False)
+    return ani
+
+def kpp_animation(data,args):
+    xv =  np.tile(np.linspace(-2,2,data.shape[0]),(data.shape[1],1))
+    yv = np.tile(np.linspace(-2.4,1.4,data.shape[1]),(data.shape[0],1)).T
+
+    fig = plt.figure(figsize=(12,12), tight_layout=True)
+    ax1 = fig.add_subplot(projection='3d')
+    ax1.set_zlim(0, 10)
+    lines =[ax1.plot_surface(xv, yv, np.ones((20,20)), cmap=cm.coolwarm, linewidth=0, antialiased=False)]
+    
+    def run(kpp_t):
+        ax1.clear()
+        ax1.set_zlim(0, 10)
+        lines =[ax1.plot_surface(xv, yv, data[:,:,kpp_t], cmap=cm.coolwarm, linewidth=0, antialiased=False)]
+        return lines
+
+    ani = animation.FuncAnimation(fig, run, blit=True, interval=data.shape[0]-1,
+        repeat=False)
+    return ani
+
+def ee_animation(data,args):
+    x = np.linspace(-5,5,data.shape[1])
+
+    fig, axes = plt.subplots(3,1, figsize=(12,12), tight_layout=True)
+    fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
+    lims = [(-2,5), (-5,5),(-5,11)]
+    lines = []
+    for i,ax in enumerate(axes.flatten()):
+        ax.set_ylim(lims[i])
+        lines = lines + ax.plot(x,np.zeros(data.shape[1]), 'k')
+
+    def run(ee_t):
+        lines[0].set_ydata(data[0,:,ee_t])
+        lines[1].set_ydata(data[1,:,ee_t])
+        lines[2].set_ydata(data[2,:,ee_t])
+        return lines
+
+    ani = animation.FuncAnimation(fig, run, blit=True, interval=data.shape[0]-1,
+        repeat=False)
+    return ani
+
+
+
+#####################
+######## OLD ########
+#####################
 def plot_Reconstruction(dataloader, model, args, show=False):
 
     if args.dataset != 'VKS':

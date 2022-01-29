@@ -6,6 +6,7 @@ import pandas as pd
 import pickle
 import torch
 from sci.lib.pod import *
+from sci.lib.dmd.decomp import *
 
 #STANDARD DATA RETREIVAL
 def VKS_DAT(data_dir, param=None):
@@ -13,7 +14,7 @@ def VKS_DAT(data_dir, param=None):
     with open(data_dir, 'rb') as f:
         data = pickle.load(f)
     data = np.nan_to_num(data)
-    return data
+    return data[:,:,:,:2]
 
 def EE_DAT(data_dir, param):
     """Loads Euler Equation Data Set"""
@@ -70,20 +71,37 @@ class DMD_LOADER():
             self.modes = args.modes
             self.tstart = args.tstart
             self.tstop = args.tstop
-            #SPLIT CONFIGS
-            self.tr_ind = args.tr_ind
-            self.val_ind = args.val_ind
 
             print('Loading ... \t Dataset: {}'.format(self.dataset))
             self.data_init = LOADERS[self.dataset](args.data_dir, args.paramEE)
             self.data = self.data_init
+            self.shape = self.data_init.shape
 
             if self.modes != None:
                 self.reduce()
 
 
-    def reduce(self):
 
+    def reduce(self):
+        """DMD Model Reduction"""
+        print('Reducing ... \t Modes: {}'.format(self.modes))
+
+        #POD CALL
+        if self.dataset == 'FIB':
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD1(self.data, self.tstart, self.tstop, self.modes)
+        if self.dataset == 'VKS':
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD2(self.data, self.tstart, self.tstop, self.modes)
+            self.data = self.Phi.reshape(self.shape[3],self.shape[0],self.shape[1],self.Phi.shape[1])
+            self.data = np.moveaxis(self.data,[0,1,2,3],[3,1,2,0])
+            self.dom_shape = [self.shape[-1]]+list(self.shape[:-2])
+            self.Nxy = self.shape[0]*self.shape[1]
+        elif self.dataset == 'EE':
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD3(self.data, self.tstart, self.tstop, self.modes)
+        elif self.dataset == 'KPP': #flatten and use POD1
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMDKPP(self.data, self.tstart, self.tstop, self.modes)
+            self.data = self.Phi.reshape(self.shape[0],self.shape[1],self.Phi.shape[1])
+            self.dom_shape = self.data_init.shape[:-1]
+        
         # DMD REDUCTION
         return 0
 
@@ -105,21 +123,22 @@ class STD_LOADER():
 
         print('Loading ... \t Dataset: {}'.format(self.dataset))
         self.data_init = LOADERS[self.dataset](args.data_dir, args.paramEE)
-        self.data = self.data_init
+        self.data = self.data_init.copy()
+        self.shape = self.data_init.shape
 
         if self.modes != None:
             self.reduce()
         
         #DATA SPLITTNG
-        train_data = self.data[:self.tr_ind, :]
+        self.train_data = self.data[:self.tr_ind, :]
         valid_data = self.data[:self.val_ind, :]
 
         #DATA NORMALIZATION
-        self.mean_data = train_data.mean(axis=0)
-        self.std = train_data.std(axis=0)
+        self.mean_data = self.train_data.mean(axis=0)
+        self.std_data = self.train_data.std(axis=0)
 
-        train_data = (train_data - self.mean_data) / self.std
-        valid_data = (valid_data - self.mean_data) / self.std
+        train_data = (self.train_data - self.mean_data) / self.std_data
+        valid_data = (valid_data - self.mean_data) / self.std_data
 
         #TENSOR DATA
         train_data = train_data.reshape((1, train_data.shape[0], train_data.shape[1]))
@@ -147,13 +166,18 @@ class STD_LOADER():
 
         #POD CALL
         if self.dataset == 'FIB':
-            self.spatial_modes, self.data, self.lv, self.ux = POD1(self.data, self.tstart, self.tstop, self.modes)
+            self.spatial_modes, self.data, self.lv, self.ux = POD1(self.data_init, self.tstart, self.tstop, self.modes)
+            # _, self.train_data, self.lv, _ = POD1(self.data_init, self.tstart,  self.tstart + self.tr_ind, self.modes)
         if self.dataset == 'VKS':
-            self.spatial_modes, self.data, self.lv, self.ux, self.uy = POD2(self.data, self.tstart, self.tstop, self.modes)
+            self.spatial_modes, self.data, self.lv , self.ux, self.uy = POD2(self.data, self.tstart, self.tstop, self.modes)
+            # _, self.train_data, self.lv, _, _ = POD2(self.data_init, self.tstart, self.tstart + self.tr_ind, self.modes)
+            self.Nxy = self.shape[0]*self.shape[1]
         elif self.dataset == 'EE':
             self.spatial_modes, self.data, self.lv, self.ux, self.uy, self.uz = POD3(self.data, self.tstart, self.tstop, self.modes)
+            # _, self.train_data, self.lv, _, _ = POD3(self.data_init, self.tstart, self.tstart + self.tr_ind, self.modes)
         elif self.dataset == 'KPP': #flatten and use POD1
             self.spatial_modes, self.data, self.lv, self.ux = PODKPP(self.data, self.tstart, self.tstop, self.modes)
+            # _, self.train_data, self.lv, _, _ = PODKPP(self.data_init, self.tstart, self.tstart + self.tr_ind, self.modes)
         
         # recovery_per = eigenvalues[:pod_modes] / eigenvalues.sum() * 100
 
@@ -180,6 +204,7 @@ class SEQ_LOADER:
         print('Loading ... \t Dataset: {}'.format(self.dataset))
         self.data_init = LOADERS[self.dataset](args.data_dir, args.paramEE)
         self.data = self.data_init
+        self.shape = self.data_init.shape
 
         if self.modes != None:
             self.reduce()
@@ -200,25 +225,25 @@ class SEQ_LOADER:
         train_data = seq_data[:, :tr_win-self.seq_win, :]
         train_label = seq_label[:, :tr_win-self.seq_win, :]
         self.train_data =  torch.FloatTensor(train_data)
-        self.mean = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
-        self.std = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
-        self.train_data = torch.FloatTensor((train_data - self.mean) / self.std).to(self.device)
+        self.mean_data = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
+        self.std_data = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
+        self.train_data = torch.FloatTensor((train_data - self.mean_data) / self.std_data).to(self.device)
 
 
         self.train_label = torch.FloatTensor(train_label)
-        self.train_label = torch.FloatTensor((train_label - self.mean) / self.std).to(self.device)
+        self.train_label = torch.FloatTensor((train_label - self.mean_data) / self.std_data).to(self.device)
         self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(self.device)
 
         # validation data
-        val_data = (seq_data[:, tr_win:val_win-self.seq_win, :]-self.mean)/self.std
-        val_label = (seq_label[:, tr_win:val_win-self.seq_win, :]-self.mean)/self.std
+        val_data = (seq_data[:, tr_win:val_win-self.seq_win, :]-self.mean_data)/self.std_data
+        val_label = (seq_label[:, tr_win:val_win-self.seq_win, :]-self.mean_data)/self.std_data
         self.valid_data =  torch.FloatTensor(val_data).to(self.device)
         self.valid_label = torch.FloatTensor(val_label).to(self.device)
         self.valid_times = (torch.ones(val_data.shape[:-1])/val_data.shape[1]).to(self.device)
 
         # validation data
-        eval_data = (seq_data[:, val_win:, :]-self.mean)/self.std
-        eval_label = (seq_label[:, val_win:, :]-self.mean)/self.std
+        eval_data = (seq_data[:, val_win:, :]-self.mean_data)/self.std_data
+        eval_label = (seq_label[:, val_win:, :]-self.mean_data)/self.std_data
         self.eval_data =  torch.FloatTensor(eval_data).to(self.device)
         self.eval_label = torch.FloatTensor(eval_label).to(self.device)
         self.eval_times = (torch.ones(eval_data.shape[:-1])/eval_data.shape[1]).to(self.device)
@@ -232,6 +257,7 @@ class SEQ_LOADER:
             self.spatial_modes, self.data, self.lv, self.ux = POD1(self.data, self.tstart, self.tstop, self.modes)
         if self.dataset == 'VKS':
             self.spatial_modes, self.data, self.lv, self.ux, self.uy = POD2(self.data, self.tstart, self.tstop, self.modes)
+            self.Nxy = self.shape[0]*self.shape[1]
         elif self.dataset == 'EE':
             self.spatial_modes, self.data, self.lv, self.ux, self.uy, self.uz = POD3(self.data, self.tstart, self.tstop, self.modes)
         elif self.dataset == 'KPP': #flatten and use POD1
@@ -258,6 +284,7 @@ class PARAM_LOADER:
         self.data_init = EE_PARAM(args.data_dir)
         self.data = self.data_init
         self.params = self.data_init.shape[-1]
+        self.shape = self.data_init.shape
 
         if self.modes != None:
             self.reduce()

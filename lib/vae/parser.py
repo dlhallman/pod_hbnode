@@ -22,7 +22,7 @@ def parse_args(*sys_args):
     data_parser.add_argument('--tstart', type = int, default=100,
                         help='Start time for reduction along time axis.')
 
-    data_parser.add_argument('--tstop', type=int, default=500,
+    data_parser.add_argument('--tstop', type=int, default=400,
                         help='Stop time for reduction along time axis.' )
     
     data_parser.add_argument('--tr_ind', type = int, default=75,
@@ -36,10 +36,10 @@ def parse_args(*sys_args):
     model_parser.add_argument('--model', type=str, default='NODE',
                         help='Dataset types: [NODE , HBNODE].')
 
-    model_parser.add_argument('--epochs', type=int, default=2000,
+    model_parser.add_argument('--epochs', type=int, default=500,
                         help='Training epochs.')
 
-    model_parser.add_argument('--latent_dim', type=int, default=2,
+    model_parser.add_argument('--latent_dim', type=int, default=6,
                         help = 'Size of latent dimension')
 
     model_parser.add_argument('--layers_enc', type=int, default=4,
@@ -51,7 +51,7 @@ def parse_args(*sys_args):
     model_parser.add_argument('--layers_node', type=list, default=[12],
                     help='NODE Layers.')
 
-    model_parser.add_argument('--units_dec', type=int, default=40,
+    model_parser.add_argument('--units_dec', type=int, default=41,
                         help='Training iterations.')
 
     model_parser.add_argument('--layers_dec', type=int, default=4,
@@ -59,6 +59,9 @@ def parse_args(*sys_args):
 
     model_parser.add_argument('--lr', type=float, default=0.00153,
                         help = 'Initial learning rate.')
+
+    model_parser.add_argument('--factor', type=float, default=0.95,
+                        help = 'Factor for reducing learning rate.')
 
     #UNIQUE PARAMS
     uq_params = parser.add_argument_group('Unique Parameters')

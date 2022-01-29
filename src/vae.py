@@ -2,6 +2,7 @@
 from torchdiffeq import odeint
 import torch.optim as optim
 from tqdm import tqdm,trange
+import numpy as np
 
 
 import sys
@@ -11,6 +12,7 @@ from sci.lib.loader import *
 from sci.lib.vae.models import *
 from sci.lib.vae.parser import *
 from sci.lib.utils import *
+from sci.lib.vis.data import *
 from sci.lib.vis.vae import *
 
 def main(parse=None):
@@ -56,7 +58,7 @@ def main(parse=None):
     meter_train = RunningAverageMeter()
     meter_valid = RunningAverageMeter()
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
-                                                    factor=0.99, patience=5, verbose=False, threshold=1e-5,
+                                                    factor=args.factor, patience=5, verbose=False, threshold=1e-5,
                                                     threshold_mode='rel', cooldown=0, min_lr=1e-7, eps=1e-08)
     criterion = torch.nn.MSELoss()
     lossTrain = []
@@ -116,7 +118,7 @@ def main(parse=None):
             dec.train()
 
         #OUTPUT
-        if itr % 100 == 0:
+        if itr % args.epochs == 0:
             output_vae = (output_vae_v.cpu().detach().numpy()) * DL.std_data + DL.mean_data
         if itr == args.epochs:
             plotNODE(output_vae, DL.data[:DL.val_ind, :], lossTrain, lossVal, itr, DL.tr_ind, args.out_dir, args)
@@ -148,6 +150,20 @@ def main(parse=None):
     data_NODE = (output_vae_e.cpu().detach().numpy()) * DL.std_data + DL.mean_data
     with open(args.out_dir + './pth/data_node8.pth', 'wb') as f:
         pickle.dump(data_NODE, f)
+
+    eig_decay(DL,args)
+    #INVERT OVER TIME
+    idx = [i for i in range(DL.valid_data.size(0) - 1, -1, -1)]
+    idx = torch.LongTensor(idx)
+    obs_t = DL.valid_data.index_select(0, idx)
+    out_enc = enc.forward(obs_t)
+    qz0_mean, qz0_logvar = out_enc[:, :latent_dim], out_enc[:, latent_dim:]
+    epsilon = torch.randn(qz0_mean.size())
+    z0 = epsilon * torch.exp(.5 * qz0_logvar) + qz0_mean
+    zt = odeint(node, z0, DL.valid_times, method='rk4').permute(1, 0, 2)
+    predictions = dec(zt).detach().numpy()
+    val_recon = mode_to_true(DL,predictions,args)
+    data_reconstruct(val_recon,-1,args,heat=True)
 
 if __name__ == "__main__":
     main()

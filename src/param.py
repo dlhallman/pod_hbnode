@@ -12,11 +12,12 @@ sys.path.append('../')
 
 #SELF IMPORTS
 from sci.lib.loader import * 
+from sci.lib.param.models import *
+from sci.lib.param.parser import *
 from sci.lib.recorder import * 
 from sci.lib.utils import *
 from sci.lib.vis.param import *
-from sci.lib.param.models import *
-from sci.lib.param.parser import *
+from sci.lib.vis.universal import *
 
 
 def main(parse=None):
