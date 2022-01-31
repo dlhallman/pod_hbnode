@@ -27,21 +27,23 @@ def DMD(X,Xp,modes):
 def DMD1(data,s_ind,e_ind,modes):
 
     var = data[s_ind:e_ind,:]
-    var1_mean = np.mean(var, axis=0)[np.newaxis, ...]
+    var_mean = np.mean(var, axis=0)[np.newaxis, ...]
 
-    var = var-var1_mean
+    var_flux = var-var_mean
 
-    X = data[s_ind:e_ind-1,:].T
-    Xp = data[s_ind+1:e_ind,:].T
+    X = flux[:-1,:].T
+    Xp = flux[1:,:].T
 
     return DMD(X,Xp,modes)
 
-
+""" DMD DECOMP FOR 2D, 2PARAM MODEL"""
 def DMD2(data,s_ind,e_ind,modes):
 
     var1 = data[s_ind:e_ind,:,:,0]
     var2 = data[s_ind:e_ind,:,:,1]
 
+    domain_len = var1.shape[1]*var1.shape[2]
+    time_len = var1.shape[0]
 
     var1_mean = np.mean(var1, axis=0)[np.newaxis, ...]
     var2_mean = np.mean(var2, axis=0)[np.newaxis, ...]
@@ -49,10 +51,9 @@ def DMD2(data,s_ind,e_ind,modes):
     var1_flux = var1-var1_mean
     var2_flux = var2-var2_mean
 
+    var1_flux = var1_flux.reshape(time_len,domain_len)
+    var2_flux = var2_flux.reshape(time_len,domain_len)
 
-    shape = var1_flux.shape
-    var1_flux = var1_flux.reshape(shape[0], shape[1] * shape[2])
-    var2_flux = var2_flux.reshape(shape[0], shape[1] * shape[2])
     stacked_flux = np.hstack((var1_flux, var2_flux))
 
     X = stacked_flux[:-1,:].T
@@ -81,16 +82,15 @@ def DMD3(data,s_ind,e_ind,modes):
 
 def DMDKPP(data,s_ind,e_ind,modes):
 
-    var = data[:,:, s_ind:e_ind]
-    var = np.moveaxis(var,[0, 1, 2], [1, 2, 0])
+    var = data[s_ind:e_ind,:,:]
 
     var_mean = np.mean(var, axis=0)[np.newaxis, ...]
-    var = var-var_mean
+    var_flux = var-var_mean
 
-    shape = var.shape
-    var = var.reshape(shape[0], shape[1] * shape[2])
+    shape = var_flux.shape
+    var_flux = var_flux.reshape(shape[0], shape[1] * shape[2])
 
-    X = var[:-1,:]
-    Xp = var[1:,:]
+    X = var_flux[:-1,:].T
+    Xp = var_flux[1:,:].T
 
     return DMD(X,Xp,modes)

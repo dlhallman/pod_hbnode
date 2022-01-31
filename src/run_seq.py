@@ -224,7 +224,7 @@ def main(parse=None):
     # plot_Anim(DL, model, args)
     eig_decay(DL, args)
     predictions = model(DL.valid_times, DL.valid_data).cpu().detach().numpy()
-    val_recon = mode_to_true(DL,predictions,args)
+    val_recon = pod_mode_to_true(DL,predictions,args)
     data_reconstruct(val_recon,-1,args,heat=True)
 
 if __name__ == "__main__":

@@ -241,7 +241,7 @@ def main(parse=None):
     z0 = epsilon * torch.exp(.5 * qz0_logvar) + qz0_mean
     zt = odeint(node, z0, DL.valid_times, method='rk4').permute(1, 0, 2)
     predictions = dec(zt).detach().numpy()
-    val_recon = mode_to_true(DL,predictions,args)
+    val_recon = pod_mode_to_true(DL,predictions,args)
     data_reconstruct(val_recon,-1,args,heat=True)
 
 if __name__ == "__main__":

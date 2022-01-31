@@ -18,17 +18,19 @@ def VKS_DAT(data_file, param=None):
     vks = np.moveaxis(vks, 2,0)
     return vks[:,:,:,:2]
 
-def EE_DAT(data_dir, param):
+def EE_DAT(data_dir, param=0):
     npzdata = np.load(data_dir)
     rho, u, E, x, params, t = npzdata['arr_0'], npzdata['arr_1'], npzdata['arr_2'], npzdata['arr_3'], npzdata['arr_4'], npzdata['arr_5']
-    return np.array([rho[:,:,param], u[:,:,param], E[:,:,param]], dtype=np.double)
+    ee = np.array([rho[:,:,param], u[:,:,param], E[:,:,param]], dtype=np.double)
+    ee = np.moveaxis(ee,0,-1)
+    return ee
 
-def FIB_DAT(data_dir, param):
+def FIB_DAT(data_dir, param=None):
     data = pd.read_table(data_dir, sep="\t", index_col=2, names=["x", "h"]).to_numpy()
     end = data.shape[0]//401
     return data[:,1].reshape(end,401)
 
-def KPP_DAT(data_dir, param):
+def KPP_DAT(data_dir, param=None):
     npdata = np.load(data_dir)
     xv, yv, kpp = npdata['arr_0'], npdata['arr_1'], npdata['arr_2']
     kpp = np.moveaxis(kpp, 2,0)
@@ -45,47 +47,80 @@ def EE_PARAM(data_dir):
 
 LOADERS = {'VKS':VKS_DAT, 'EE': EE_DAT, 'FIB' : FIB_DAT, 'KPP': KPP_DAT}
 
+
+"""
+DATASETS
+
+
+"""
+
 class DMD_DATASET(Dataset):
     def __init__(self, args, modes=None):
         
             #ARGS
-            assert args.dataset in LOADERS
-            #DATA CONFIGS
             self.args = args
+            assert args.dataset in LOADERS
 
+            #LOAD DATA 
             print('Loading ... \t Dataset: {}'.format(args.dataset))
             self.data_init = LOADERS[args.dataset](args.data_dir, None)
             self.data = self.data_init
             self.shape = self.data_init.shape
 
+            #DMD REDUCTION
             if args.modes != None:
                 self.reduce()
+
+            self.time_len = self.X.shape[-1]
+            self.data_recon=None
 
     def reduce(self):
         args = self.args
         """DMD Model Reduction"""
         print('Reducing ... \t Modes: {}'.format(self.args.modes))
+        if args.dataset == 'FIB':
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD1(self.data, args.tstart, args.tstop, args.modes)
+        elif args.dataset == 'VKS':
+            self.domain_len = self.shape[1]*self.shape[2]
+            self.domain_shape = self.shape[1:-1]
+            self.component_len = self.shape[-1]
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD2(self.data, args.tstart, args.tstop, args.modes)
+            self.data = self.Phi.reshape(self.shape[-1],self.shape[1],self.shape[2],self.Phi.shape[1]).T
+        elif args.dataset == 'EE':
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD3(self.data, args.tstart, args.tstop, args.modes)
+        elif args.dataset == 'KPP': #flatten and use POD1
+            self.domain_len = self.shape[1]*self.shape[2]
+            self.domain_shape = self.shape[1:]
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMDKPP(self.data, args.tstart, args.tstop, args.modes)
+        return 0
+    """RECONSTRUCT FROM GIVEN DATA"""
+    def reconstruct(self,time_shape=None):
+        args = self.args
+        if self.data_recon is None:
+            raise Exception('Reconstruction data has not been set')
+        if time_shape is None:
+            time_shape=args.tpred
+        end_shape = [time_shape]+list(self.domain_shape)
 
         #POD CALL
         if args.dataset == 'FIB':
-            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD1(self.data, args.tstart, args.tstop, args.modes)
-        if args.dataset == 'VKS':
-            self.Nxy = self.shape[1]*self.shape[2]
-            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD2(self.data, args.tstart, args.tstop, args.modes)
-            self.data = self.Phi.reshape(self.shape[-1],self.shape[1],self.shape[2],self.Phi.shape[1]).T
-            self.dom_shape = [self.shape[-1]]+list(self.shape[:-2])
-        elif self.dataset == 'EE':
+            return 0
+        elif args.dataset == 'VKS':
+            var1_xk = np.real(self.data_recon[:,:self.domain_len].reshape(end_shape))
+            var2_xk = np.real(self.data_recon[:,self.domain_len:].reshape(end_shape))
+            self.data_recon = np.moveaxis(np.array((var1_xk,var2_xk)),0,-1)
+        elif args.dataset == 'EE':
             self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD3(self.data, args.tstart, args.tstop, args.modes)
-        elif self.dataset == 'KPP': #flatten and use POD1
-            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMDKPP(self.data, args.tstart, args.tstop, args.modes)
-            self.data = self.Phi.reshape(self.shape[0],self.shape[1],self.Phi.shape[1])
-            self.dom_shape = self.data_init.shape[:-1]
+        elif args.dataset == 'KPP': #flatten and use POD1
+            self.data_recon=np.real(self.data_recon.reshape(end_shape))
         
-        # DMD REDUCTION
-        return 0
+
 
     def __len__(self):
-        return self.shape[0]
+        return self.time_len
+
+    def __shape(self):
+        return self.domain_shape
 
     def __get_item(self,idx):
         return None,None

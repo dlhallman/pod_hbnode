@@ -9,10 +9,10 @@ sys.path.append('./')
 
 from lib.decomp.dmd import *
 from lib.datasets import * 
-from lib.utils.recorder import * 
-from lib.utils import *
-from lib.vis.dmd import *
-from lib.vis.data import *
+from lib.utils.misc import set_outdir
+from lib.vis.animate import data_animation
+from lib.vis.modes import eig_decay
+from lib.vis.reconstruct import data_reconstruct
 
 
 """MODEL ARGUMENTS"""
@@ -26,18 +26,21 @@ data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
 data_parser.add_argument('--out_dir', type=str, default='./out/',
                     help='Directory of output from cwd: sci.')
 decomp_parser = parser.add_argument_group('Decomposition Parameters')
-decomp_parser.add_argument('--modes', type = int, default = 4,
+decomp_parser.add_argument('--modes', type = int, default = 64,
                     help = 'DMD reduction modes.\nNODE model parameters.')
-decomp_parser.add_argument('--tstart', type = int, default=100,
+decomp_parser.add_argument('--tstart', type = int, default=0,
                     help='Start time for reduction along time axis.')
-decomp_parser.add_argument('--tstop', type=int, default=240,
+decomp_parser.add_argument('--tstop', type=int, default=101,
                     help='Stop time for reduction along time axis.' )
-decomp_parser.add_argument('--tpred', type=int, default=300,
+decomp_parser.add_argument('--tpred', type=int, default=400,
                     help='Prediction time.' )
 uq_params = parser.add_argument_group('Unique Parameters')
 uq_params.add_argument('--verbose', type=bool, default=False,
                 help='To display output or not.')
 args, unknown = parser.parse_known_args()
+
+assert(args.tpred>args.tstop)
+assert(args.tstop-args.tstart>args.modes)
 
 if args.verbose:
     print('Parsed Arguments')
@@ -52,26 +55,22 @@ set_outdir(args.out_dir, args)
 dmd = DMD_DATASET(args)
 
 """INITIALIZE"""
-power = args.tpred - args.tstop + 1
-xr =dmd.Atilde@dmd.Ur.T@dmd.X
-xk = dmd.Ur@xr
-X = [xk]
+power = args.tpred
+Xk = np.array(dmd.X.T[0])
 
 """GENERATE PREDICTIONS"""
-for _ in trange(1,power, desc='DMD Generation'):
+for k in trange(1,power, desc='DMD Generation'):
+    Lambda_k = np.linalg.matrix_power(dmd.Lambda,k)
+    xk=dmd.Phi@Lambda_k@dmd.b
+    Xk=np.vstack((Xk,xk))
 
-    xr =dmd.Atilde@dmd.Ur.T@xk
-    xk = dmd.Ur@xr
+Xk = np.array(Xk)
 
-    X = X + [xk]
-X = np.array(X)
+dmd.data_recon = Xk
 
-end_shape = [X.shape[0]]+list(dmd.dom_shape)
-X = np.array(X).reshape(end_shape)
-X =  np.moveaxis(X,1,-1)
-if args.dataset == "KPP":
-    X = X.T
+dmd.reconstruct()
 
 if args.verbose: print("Generating Output ...\n",X.shape)
-data_reconstruct(X,-1,args)
+data_reconstruct(dmd.data_recon,-1,args)
+data_animation(dmd.data_recon,args)
 eig_decay(dmd,args)
