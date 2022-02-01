@@ -63,53 +63,37 @@ def POD2(U, s_ind, e_ind, modes):
     return spatial_modes, temporal_coefficients, eigen_vals, flux1_copy, flux2_copy
 
 
-def POD3(U, s_ind, e_ind, modes):
+def POD3(data, s_ind, e_ind, modes):
     """ Computes the spatial modes and temporal coefficients using the POD """
 
-    # density in x
-    S_ux = U[0,:, s_ind:e_ind]
-    S_ux = np.moveaxis(S_ux,[0, 1], [1, 0])
+    var1 = data[s_ind:e_ind,:,0]
+    var2 = data[s_ind:e_ind,:,1]
+    var3 = data[s_ind:e_ind,:,2]
 
-    # velocity in x
-    S_uy = U[1,:, s_ind:e_ind]
-    S_uy = np.moveaxis(S_uy, [0, 1], [1, 0])
-    
-    # velocity in x
-    S_uz = U[2,:, s_ind:e_ind]
-    S_uz = np.moveaxis(S_uz, [0, 1], [1, 0])
+    var1_mean = np.mean(var1, axis=0)[np.newaxis, ...]
+    var2_mean = np.mean(var2, axis=0)[np.newaxis, ...]
+    var3_mean = np.mean(var3, axis=0)[np.newaxis, ...]
 
-    # taking the temporal mean of snapshots
-    S_uxm = np.mean(S_ux, axis=0)[np.newaxis, ...]
-    S_uym = np.mean(S_uy, axis=0)[np.newaxis, ...]
-    S_uzm = np.mean(S_uy, axis=0)[np.newaxis, ...]
-
-    # fluctuating components: taking U-Um
-    Ux = S_ux - S_uxm
-    Uy = S_uy - S_uym
-    Uz = S_uz-S_uzm
+    var1_flux = var1 - var1_mean
+    var2_flux = var2 - var2_mean
+    var3_flux = var3 - var3_mean
         
-    # return copies
-    Uxr = np.copy(Ux)
-    Uyr = np.copy(Uy)
-    Uzr = np.copy(Uz)
-
-    # Reshaping to create snapshot matrix Y
-    Y = np.hstack((Ux, Uy, Uz))
+    stacked_flux = np.hstack((var1_flux, var2_flux, var3_flux))
 
     # Snapshot Method:
-    Cs = np.matmul(Y, Y.T)    
+    snap_shots = np.matmul(stacked_flux, stacked_flux.T)    
 
     # L:eigvals, As:eigvecs
-    Lv, As = scipy.linalg.eigh(Cs)
+    eigen_vals, eigen_vecs = scipy.linalg.eigh(snap_shots)
 
     # descending order
-    Lv = Lv[Lv.shape[0]::-1]
-    As = As[:, Lv.shape[0]::-1]
+    eigen_vals = eigen_vals[eigen_vals.shape[0]::-1]
+    eigen_vecs = eigen_vecs[:, eigen_vals.shape[0]::-1]
 
-    spatial_modes = np.matmul(Y.T, As[:, :modes]) / np.sqrt(Lv[:modes])    
-    temporal_coefficients = np.matmul(Y, spatial_modes)
+    spatial_modes = np.matmul(stacked_flux.T, eigen_vecs[:, :modes]) / np.sqrt(eigen_vals[:modes])    
+    temporal_coefficients = np.matmul(stacked_flux, spatial_modes)
 
-    return spatial_modes, temporal_coefficients, Lv, Uxr, Uyr, Uzr
+    return spatial_modes, temporal_coefficients, eigen_vals, var1_flux.copy(), var2_flux.copy(), var3_flux.copy()
 
 
 

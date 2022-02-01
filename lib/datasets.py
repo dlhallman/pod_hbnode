@@ -62,7 +62,7 @@ class DMD_DATASET(Dataset):
 
             #LOAD DATA 
             print('Loading ... \t Dataset: {}'.format(args.dataset))
-            self.data_init = LOADERS[args.dataset](args.data_dir, None)
+            self.data_init = LOADERS[args.dataset](args.data_dir)
             self.data = self.data_init
             self.shape = self.data_init.shape
 
@@ -86,6 +86,8 @@ class DMD_DATASET(Dataset):
             self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD2(self.data, args.tstart, args.tstop, args.modes)
             self.data = self.Phi.reshape(self.shape[-1],self.shape[1],self.shape[2],self.Phi.shape[1]).T
         elif args.dataset == 'EE':
+            self.domain_len = self.shape[1]
+            self.domain_shape = [self.shape[1]]
             self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD3(self.data, args.tstart, args.tstop, args.modes)
         elif args.dataset == 'KPP': #flatten and use POD1
             self.domain_len = self.shape[1]*self.shape[2]
@@ -109,7 +111,10 @@ class DMD_DATASET(Dataset):
             var2_xk = np.real(self.data_recon[:,self.domain_len:].reshape(end_shape))
             self.data_recon = np.moveaxis(np.array((var1_xk,var2_xk)),0,-1)
         elif args.dataset == 'EE':
-            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD3(self.data, args.tstart, args.tstop, args.modes)
+            var1_xk = np.real(self.data_recon[:,:self.domain_len].reshape(end_shape))
+            var2_xk = np.real(self.data_recon[:,self.domain_len:2*self.domain_len].reshape(end_shape))
+            var3_xk = np.real(self.data_recon[:,2*self.domain_len:].reshape(end_shape))
+            self.data_recon = np.moveaxis(np.array((var1_xk,var2_xk,var3_xk)),0,-1)
         elif args.dataset == 'KPP': #flatten and use POD1
             self.data_recon=np.real(self.data_recon.reshape(end_shape))
         

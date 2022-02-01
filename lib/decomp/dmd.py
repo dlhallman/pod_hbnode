@@ -64,19 +64,22 @@ def DMD2(data,s_ind,e_ind,modes):
 
 def DMD3(data,s_ind,e_ind,modes):
 
-    var1 = data[0,:, s_ind:e_ind]
-    var1 = np.moveaxis(var1,[0, 1], [1, 0])
+    var1 = data[s_ind:e_ind,:,0]
+    var2 = data[s_ind:e_ind,:,1]
+    var3 = data[s_ind:e_ind,:,2]
 
-    var2 = data[1,:, s_ind:e_ind]
-    var2 = np.moveaxis(var2,[0, 1], [1, 0])
+    var1_mean = np.mean(var1, axis=0)[np.newaxis, ...]
+    var2_mean = np.mean(var2, axis=0)[np.newaxis, ...]
+    var3_mean = np.mean(var3, axis=0)[np.newaxis, ...]
 
-    var3 = data[2,:, s_ind:e_ind]
-    var3 = np.moveaxis(var3,[0, 1], [1, 0])
+    var1_flux = var1-var1_mean
+    var2_flux = var2-var2_mean
+    var3_flux = var3-var3_mean
 
-    Y = np.hstack((var1, var2, var3))
+    stacked_flux = np.hstack((var1_flux, var2_flux, var3_flux))
 
-    X = Y[:-1,:]
-    Xp = Y[1:,:]
+    X = stacked_flux[:-1,:].T
+    Xp = stacked_flux[1:,:].T
 
     return DMD(X,Xp,modes)
 

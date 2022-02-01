@@ -28,7 +28,7 @@ def kpp_plot(data,time,axis,args,index=None):
 
 def ee_plot(data,time,axis,index,args, heat=None):
     x = np.linspace(-5,5,data.shape[1])
-    axis.plot(x,data[index,:,time], 'k')
+    axis.plot(x,data[time,:,index], 'k')
     return 1
 
 """

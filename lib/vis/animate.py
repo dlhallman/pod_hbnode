@@ -49,7 +49,7 @@ def kpp_animate(data,args):
     ani.save(args.out_dir+'/'+end_str+'.gif', "PillowWriter", fps=6)
     return 1
 
-def ee_animation(data,args):
+def ee_animate(data,args):
     x = np.linspace(-5,5,data.shape[1])
 
     fig, axes = plt.subplots(3,1, figsize=(12,12), tight_layout=True)
@@ -61,14 +61,16 @@ def ee_animation(data,args):
         lines = lines + ax.plot(x,np.zeros(data.shape[1]), 'k')
 
     def run_ee_lines(ee_t):
-        lines[0].set_ydata(data[0,:,ee_t])
-        lines[1].set_ydata(data[1,:,ee_t])
-        lines[2].set_ydata(data[2,:,ee_t])
+        lines[0].set_ydata(data[ee_t,:,0])
+        lines[1].set_ydata(data[ee_t,:,1])
+        lines[2].set_ydata(data[ee_t,:,2])
         return lines
 
     ani = animation.FuncAnimation(fig, run_ee_lines, blit=False, interval=data.shape[0]-1,
         repeat=False)
-    return ani
+    end_str = str(args.dataset+'_'+args.model+'_recon').lower()
+    ani.save(args.out_dir+'/'+end_str+'.gif', "PillowWriter", fps=6)
+    return 1
 
 
 """
@@ -76,7 +78,7 @@ ANIMATION HEADER
 
 """
 
-ANIM = {'VKS':vks_animate,'KPP':kpp_animate}
+ANIM = {'VKS':vks_animate,'KPP':kpp_animate, 'EE':ee_animate}
 def data_animation(data,args):
 
     ANIM[args.dataset](data,args)
