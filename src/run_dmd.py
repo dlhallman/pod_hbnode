@@ -8,7 +8,7 @@ import sys
 sys.path.append('./')
 
 from lib.decomp.dmd import *
-from lib.datasets import * 
+from lib.datasets import DMD_DATASET 
 from lib.utils.misc import set_outdir
 from lib.vis.animate import data_animation
 from lib.vis.modes import eig_decay
@@ -55,11 +55,10 @@ set_outdir(args.out_dir, args)
 dmd = DMD_DATASET(args)
 
 """INITIALIZE"""
-power = args.tpred
 Xk = np.array(dmd.X.T[0])
 
 """GENERATE PREDICTIONS"""
-for k in trange(1,power, desc='DMD Generation'):
+for k in trange(1,args.tpred, desc='DMD Generation'):
     Lambda_k = np.linalg.matrix_power(dmd.Lambda,k)
     xk=dmd.Phi@Lambda_k@dmd.b
     Xk=np.vstack((Xk,xk))
@@ -71,6 +70,6 @@ dmd.data_recon = Xk
 dmd.reconstruct()
 
 if args.verbose: print("Generating Output ...\n",X.shape)
-data_reconstruct(dmd.data_recon,-1,args)
-data_animation(dmd.data_recon,args)
 eig_decay(dmd,args)
+data_reconstruct(dmd.data_recon.copy(),args.tpred-10,args)
+data_animation(dmd.data_recon,args)

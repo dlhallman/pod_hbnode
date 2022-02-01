@@ -17,19 +17,19 @@ DPI = 160
 def vks_plot(data,time,axis,args,index=None):
     plt.style.use('classic')
     axis.imshow(data[time,:,:,index].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-    return axis
+    return 1
 
 def kpp_plot(data,time,axis,args,index=None):
     plt.style.use('default')
     xv =  np.tile(np.linspace(-2,2,data.shape[1]),(data.shape[2],1))
     yv = np.tile(np.linspace(-2.4,1.4,data.shape[2]),(data.shape[1],1)).T
-    axis.plot_surface(xv, yv, data[time,:,:], cmap=cm.coolwarm, linewidth=0)
-    return axis
+    axis.plot_surface(xv, yv, data[time], cmap=cm.coolwarm, linewidth=0)
+    return 1
 
 def ee_plot(data,time,axis,index,args, heat=None):
     x = np.linspace(-5,5,data.shape[1])
     axis.plot(x,data[index,:,time], 'k')
-    return axis
+    return 1
 
 """
 DATA RECONSTRUCTION HEAD
@@ -37,7 +37,7 @@ DATA RECONSTRUCTION HEAD
 
 def data_reconstruct(data,time,args):
 
-    fig = plt.figure(figsize=(10,10), tight_layout=True)
+    fig = plt.figure(tight_layout=True)
     if args.dataset == 'VKS':
         ax = plt.subplot(211)
         vks_plot(data,time,ax,args,index=0)

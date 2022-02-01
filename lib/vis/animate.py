@@ -19,7 +19,7 @@ def vks_animate(data,args):
         lines[0].set_data(data[vks_t,:,:,0].T)
         lines[1].set_data(data[vks_t,:,:,1].T)
         return lines
-    ani = animation.FuncAnimation(fig, run_vks_lines, blit=True, interval=data.shape[0]-1,
+    ani = animation.FuncAnimation(fig, run_vks_lines, blit=False, interval=data.shape[0]-1,
         repeat=False)
     end_str = str(args.dataset+'_'+args.model+'_recon').lower()
     ani.save(args.out_dir+'/'+end_str+'.gif', "PillowWriter", fps=6)
@@ -40,10 +40,10 @@ def kpp_animate(data,args):
     def run_kpp_lines(kpp_t):
         ax1.clear()
         ax1.set_zlim(-val,val)
-        lines =[ax1.plot_surface(xv, yv, data[kpp_t,:,:], cmap=cm.coolwarm, linewidth=0, antialiased=False)]
+        lines =[ax1.plot_surface(xv, yv, data[kpp_t], cmap=cm.coolwarm, linewidth=0, antialiased=False)]
         return lines
 
-    ani = animation.FuncAnimation(fig, run_kpp_lines, blit=True, interval=data.shape[0]-1,
+    ani = animation.FuncAnimation(fig, run_kpp_lines, blit=False, interval=data.shape[0]-1,
         repeat=False)
     end_str = str(args.dataset+'_'+args.model+'_recon').lower()
     ani.save(args.out_dir+'/'+end_str+'.gif', "PillowWriter", fps=6)
@@ -66,7 +66,7 @@ def ee_animation(data,args):
         lines[2].set_ydata(data[2,:,ee_t])
         return lines
 
-    ani = animation.FuncAnimation(fig, run_ee_lines, blit=True, interval=data.shape[0]-1,
+    ani = animation.FuncAnimation(fig, run_ee_lines, blit=False, interval=data.shape[0]-1,
         repeat=False)
     return ani
 

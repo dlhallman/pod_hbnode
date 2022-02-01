@@ -1,5 +1,4 @@
 #IMPORTS
-from einops import rearrange
 import numpy as np
 import pandas as pd
 import pickle
