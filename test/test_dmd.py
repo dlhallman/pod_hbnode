@@ -63,7 +63,6 @@ Phi = Xp@(Vr@invSigmar)@W
 alpha1 = Sigmar@(Vr[0,:].T)
 b = np.linalg.solve(W@Lambda,alpha1)
 
-print(Phi.shape, Lambda.shape, b.shape)
 X0 = Xp[-1,:]
 
 fig, axes = plt.subplots(2,1,tight_layout=True)

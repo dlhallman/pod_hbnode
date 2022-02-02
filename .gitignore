@@ -9,3 +9,5 @@ data/*.npz
 #References and Text Documents
 ref/*
 ref/tex/*
+#Swap Files
+*.swp

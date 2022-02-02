@@ -55,12 +55,12 @@ set_outdir(args.out_dir, args)
 dmd = DMD_DATASET(args)
 
 """INITIALIZE"""
-Xk = np.array(dmd.X.T[0])
+Xk = np.array(dmd.X.T[0][:dmd.domain_len])
 
 """GENERATE PREDICTIONS"""
 for k in trange(1,args.tpred, desc='DMD Generation'):
     Lambda_k = np.linalg.matrix_power(dmd.Lambda,k)
-    xk=dmd.Phi@Lambda_k@dmd.b
+    xk=(dmd.Phi@Lambda_k@dmd.b)[:dmd.domain_len]
     Xk=np.vstack((Xk,xk))
 
 Xk = np.array(Xk)

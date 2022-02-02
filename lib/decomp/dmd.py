@@ -1,8 +1,6 @@
 import numpy as np
 import scipy.linalg
 
-
-
 def DMD(X,Xp,modes):
 
     U,Sigma,Vh = np.linalg.svd(X, full_matrices=False, compute_uv=True)
@@ -21,6 +19,8 @@ def DMD(X,Xp,modes):
 
     alpha1 = Sigmar@(Vr[0,:].T)
     b = np.linalg.solve(W@Lambda,alpha1)
+
+    print(Lambda.shape, Phi.shape, b.shape)
 
     return X, Atilde, Ur, Phi, Lambda, Sigma, b
 
@@ -92,8 +92,27 @@ def DMDKPP(data,s_ind,e_ind,modes):
 
     shape = var_flux.shape
     var_flux = var_flux.reshape(shape[0], shape[1] * shape[2])
+    lifts = ('cos','sin','quad','cube')
+    var_flux = lift(var_flux,lifts)
 
     X = var_flux[:-1,:].T
     Xp = var_flux[1:,:].T
 
     return DMD(X,Xp,modes)
+
+
+def lift(data_init,lifts=()):
+  data = data_init.copy()
+  if 'sin' in lifts:
+    lift = np.sin(data_init)
+    data = np.hstack((data,lift))
+  if 'cos' in lifts:
+    lift = np.cos(data_init)
+    data = np.hstack((data,lift))
+  if 'quad' in lifts:
+    lift = np.power(data_init,2)
+    data = np.hstack((data,lift))
+  if 'cube' in lifts:
+    lift = np.power(data_init,3)
+    data = np.hstack((data,lift))
+  return data.copy()
