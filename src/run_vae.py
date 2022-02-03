@@ -12,7 +12,9 @@ sys.path.append('./')
 from lib.datasets import VAE_DATASET
 from lib.models.vae import *
 from lib.utils.misc import *
-from lib.vis.reconstruct import *
+from lib.vis.modes import *
+from lib.vis.animate import data_animation
+from lib.vis.reconstruct import data_reconstruct
 
 
 """INPUT ARGUMETNS"""
@@ -82,7 +84,7 @@ latent_dim = obs_dim - args.latent_dim
 layers_node = [latent_dim] + args.layers_node + [latent_dim]
 
 MODELS = {'NODE' : NODE(df = LatentODE(layers_node)),
-        'HBNODE' : hbnode(LatentODE(layers_node))}
+        'HBNODE' : HBNODE(LatentODE(layers_node))}
 
 if args.model == "HBNODE":
     latent_dim = latent_dim*2
@@ -92,7 +94,7 @@ node = MODELS[args.model]
 dec = Decoder(latent_dim, obs_dim, args.units_dec, args.layers_dec)
 params = (list(enc.parameters()) + list(node.parameters()) + list(dec.parameters()))
 
-#LEARNING UTILITIES
+"""GENERATE TRAINING UTILITIES"""
 optimizer = optim.AdamW(params, lr= args.lr)
 loss_meter_t = RunningAverageMeter()
 meter_train = RunningAverageMeter()
@@ -147,8 +149,8 @@ for itr in trange(1, args.epochs + 1):
         zv = odeint(node, z0, vae.valid_times, method='rk4').permute(1, 0, 2)
         output_vae_v = dec(zv)
 
-        loss_v = criterion(output_vae_v[:, vae.tr_ind:],
-                            vae.valid_data[:, vae.tr_ind:])
+        loss_v = criterion(output_vae_v[:, args.tr_ind:],
+                            vae.valid_data[:, args.tr_ind:])
 
         meter_valid.update(loss_v.item())
         lossVal.append(meter_valid.avg)
@@ -160,9 +162,6 @@ for itr in trange(1, args.epochs + 1):
     #OUTPUT
     if itr % args.epochs == 0:
         output_vae = (output_vae_v.cpu().detach().numpy()) * vae.std_data + vae.mean_data
-    if itr == args.epochs:
-        plotNODE(output_vae, vae.data[:vae.val_ind, :], lossTrain, lossVal, itr, vae.tr_ind, args.out_dir, args)
-
     if np.isnan(lossTrain[itr - 1]):
         break
 
@@ -202,5 +201,7 @@ epsilon = torch.randn(qz0_mean.size())
 z0 = epsilon * torch.exp(.5 * qz0_logvar) + qz0_mean
 zt = odeint(node, z0, vae.valid_times, method='rk4').permute(1, 0, 2)
 predictions = dec(zt).detach().numpy()
+plot_modes(vae,predictions,vae.valid_data,np.arange(args.tstart,args.val_ind),args)
 val_recon = pod_mode_to_true(vae,predictions,args)
-data_reconstruct(val_recon,-1,args,heat=True)
+data_reconstruct(val_recon,-1,args)
+data_animation(val_recon,args)

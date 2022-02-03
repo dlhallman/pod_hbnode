@@ -24,7 +24,6 @@ def vks_animate(data,args):
     end_str = str(args.dataset+'_'+args.model+'_recon').lower()
     ani.save(args.out_dir+'/'+end_str+'.gif', "PillowWriter", fps=6)
     return 1
-
     
 def kpp_animate(data,args):
     plt.style.use('default')

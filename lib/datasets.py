@@ -132,26 +132,20 @@ class VAE_DATASET():
         #ARGS
         assert args.dataset in LOADERS
         #DATA CONFIGS
-        self.dataset = args.dataset
-        self.data_dir = args.data_dir
-        self.modes = args.modes
-        self.tstart = args.tstart
-        self.tstop = args.tstop
-        #SPLIT CONFIGS
-        self.tr_ind = args.tr_ind
-        self.val_ind = args.val_ind
+        self.args = args
 
-        print('Loading ... \t Dataset: {}'.format(self.dataset))
-        self.data_init = LOADERS[self.dataset](args.data_dir)
+        print('Loading ... \t Dataset: {}'.format(args.dataset))
+        self.data_init = LOADERS[args.dataset](args.data_dir)
         self.data = self.data_init.copy()
         self.shape = self.data_init.shape
+        self.time_len = self.shape[0]
 
-        if self.modes != None:
+        if args.modes != None:
             self.reduce()
-        
+
         #DATA SPLITTNG
-        self.train_data = self.data[:self.tr_ind, :]
-        valid_data = self.data[:self.val_ind, :]
+        self.train_data = self.data[:args.tr_ind, :]
+        valid_data = self.data[:args.val_ind, :]
 
         #DATA NORMALIZATION
         self.mean_data = self.train_data.mean(axis=0)
@@ -167,7 +161,7 @@ class VAE_DATASET():
         valid_data = valid_data.reshape((1, valid_data.shape[0], valid_data.shape[1]))
         self.valid_data = torch.FloatTensor(valid_data)
 
-        self.data_eval = self.data[self.val_ind:, :]
+        self.data_eval = self.data[args.val_ind:, :]
 
         #INVERT OVER TIME
         idx = [i for i in range(self.train_data.size(0) - 1, -1, -1)]
@@ -177,36 +171,28 @@ class VAE_DATASET():
         #NORMALIZE TIME
         eval_times = np.linspace(0, 1, self.data.shape[0])
         self.eval_times = torch.from_numpy(eval_times).float()
-        self.train_times = self.eval_times[:self.tr_ind]
-        self.valid_times = self.eval_times[:self.val_ind]
+        self.train_times = self.eval_times[:args.tr_ind]
+        self.valid_times = self.eval_times[:args.val_ind]
 
+    """POD Model Reduction"""
     def reduce(self):
-        """POD Model Reduction"""
-        print('Reducing ... \t Modes: {}'.format(self.modes))
-
-        #POD CALL
-        if self.dataset == 'FIB':
-            self.spatial_modes, self.data, self.lv, self.ux = POD1(self.data_init, self.tstart, self.tstop, self.modes)
-            # _, self.train_data, self.lv, _ = POD1(self.data_init, self.tstart,  self.tstart + self.tr_ind, self.modes)
-        if self.dataset == 'VKS':
-            self.spatial_modes, self.data, self.lv , self.ux, self.uy = POD2(self.data, self.tstart, self.tstop, self.modes)
-            # _, self.train_data, self.lv, _, _ = POD2(self.data_init, self.tstart, self.tstart + self.tr_ind, self.modes)
-            self.Nxy = self.shape[0]*self.shape[1]
-        elif self.dataset == 'EE':
-            self.spatial_modes, self.data, self.lv, self.ux, self.uy, self.uz = POD3(self.data, self.tstart, self.tstop, self.modes)
-            # _, self.train_data, self.lv, _, _ = POD3(self.data_init, self.tstart, self.tstart + self.tr_ind, self.modes)
-        elif self.dataset == 'KPP': #flatten and use POD1
-            self.spatial_modes, self.data, self.lv, self.ux = PODKPP(self.data, self.tstart, self.tstop, self.modes)
-            # _, self.train_data, self.lv, _, _ = PODKPP(self.data_init, self.tstart, self.tstart + self.tr_ind, self.modes)
-        
-        # recovery_per = eigenvalues[:pod_modes] / eigenvalues.sum() * 100
-
+        args = self.args
+        print('Reducing ... \t Modes: {}'.format(args.modes))
+        if args.dataset == 'FIB':
+            self.spatial_modes, self.data, self.lv, self.h = POD1(self.data_init, args.tstart, args.tstop, args.modes)
+        elif args.dataset == 'VKS':
+            self.domain_len = self.shape[1]*self.shape[2]
+            self.domain_shape = self.shape[1:-1]
+            self.component_len = self.shape[-1]
+            self.spatial_modes, self.data, self.lv, self.ux, self.uy = POD2(self.data, args.tstart, args.tstop, args.modes)
+        elif args.dataset == 'EE':
+            self.spatial_modes, self.data, self.lv, self.rho, self.v, self.e = POD3(self.data, args.tstart, args.tstop, args.modes)
+        elif args.dataset == 'KPP': #flatten and use POD1
+            self.spatial_modes, self.data, self.lv, self.h = PODKPP(self.data, args.tstart, args.tstop, args.modes)
         return 1
 
 class SEQ_LOADER:
-
     def __init__(self, args):
-        
         assert args.dataset in LOADERS
         #DATA CONFIG
         self.dataset = args.dataset
@@ -225,6 +211,7 @@ class SEQ_LOADER:
         self.data_init = LOADERS[self.dataset](args.data_dir, args.paramEE)
         self.data = self.data_init
         self.shape = self.data_init.shape
+        self.time_len = self.shape[0]
 
         if self.modes != None:
             self.reduce()
@@ -268,16 +255,17 @@ class SEQ_LOADER:
         self.eval_label = torch.FloatTensor(eval_label).to(self.device)
         self.eval_times = (torch.ones(eval_data.shape[:-1])/eval_data.shape[1]).to(self.device)
 
+    """POD Model Reduction"""
     def reduce(self):
-        """POD Model Reduction"""
+        args = self.args
         print('Reducing ... \t Modes: {}'.format(self.modes))
-
-        #POD CALL
         if self.dataset == 'FIB':
             self.spatial_modes, self.data, self.lv, self.ux = POD1(self.data, self.tstart, self.tstop, self.modes)
         if self.dataset == 'VKS':
+            self.domain_len = self.shape[1]*self.shape[2]
+            self.domain_shape = self.shape[1:-1]
+            self.component_len = self.shape[-1]
             self.spatial_modes, self.data, self.lv, self.ux, self.uy = POD2(self.data, self.tstart, self.tstop, self.modes)
-            self.Nxy = self.shape[0]*self.shape[1]
         elif self.dataset == 'EE':
             self.spatial_modes, self.data, self.lv, self.ux, self.uy, self.uz = POD3(self.data, self.tstart, self.tstop, self.modes)
         elif self.dataset == 'KPP': #flatten and use POD1
@@ -305,6 +293,7 @@ class PARAM_LOADER:
         self.data = self.data_init
         self.params = self.data_init.shape[-1]
         self.shape = self.data_init.shape
+        self.time_len = self.shape[0]
 
         if self.modes != None:
             self.reduce()
