@@ -89,9 +89,9 @@ class hbnode(NODE):
     def __init__(self, df, actv_h=None, gamma_guess=-3.0, gamma_act='sigmoid', corr=-100, corrf=True):
         super().__init__(df)
         # Momentum parameter gamma
-        self.gamma = Parameter([gamma_guess], frozen=False)
+        self.gamma = nn.Parameter([gamma_guess], frozen=False)
         self.gammaact = nn.Sigmoid() if gamma_act == 'sigmoid' else gamma_act
-        self.corr = Parameter([corr], frozen=corrf)
+        self.corr = nn.Parameter([corr], frozen=corrf)
         self.sp = nn.Softplus()
         # Activation for dh, GHBNODE only
         self.actv_h = nn.Identity() if actv_h is None else actv_h
