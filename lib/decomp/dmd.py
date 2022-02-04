@@ -10,7 +10,6 @@ def DMD(X,Xp,modes):
 
     invSigmar = np.linalg.inv(Sigmar)
 
-
     Atilde = Ur.T@Xp@Vr@invSigmar
     Lambda, W = np.linalg.eig(Atilde)
     Lambda = np.diag(Lambda)
@@ -20,24 +19,22 @@ def DMD(X,Xp,modes):
     alpha1 = Sigmar@(Vr[0,:].T)
     b = np.linalg.solve(W@Lambda,alpha1)
 
-    print(Lambda.shape, Phi.shape, b.shape)
-
     return X, Atilde, Ur, Phi, Lambda, Sigma, b
 
-def DMD1(data,s_ind,e_ind,modes):
+def DMD1(data,s_ind,e_ind,modes,lifts=()):
 
     var = data[s_ind:e_ind,:]
     var_mean = np.mean(var, axis=0)[np.newaxis, ...]
 
     var_flux = var-var_mean
 
-    X = flux[:-1,:].T
-    Xp = flux[1:,:].T
+    X = var_flux[:-1,:].T
+    Xp = var_flux[1:,:].T
 
     return DMD(X,Xp,modes)
 
 """ DMD DECOMP FOR 2D, 2PARAM MODEL"""
-def DMD2(data,s_ind,e_ind,modes):
+def DMD2(data,s_ind,e_ind,modes,lifts=()):
 
     var1 = data[s_ind:e_ind,:,:,0]
     var2 = data[s_ind:e_ind,:,:,1]
@@ -56,13 +53,15 @@ def DMD2(data,s_ind,e_ind,modes):
 
     stacked_flux = np.hstack((var1_flux, var2_flux))
 
+    lifted_flux = lift(stacked_flux,lifts)
+
     X = stacked_flux[:-1,:].T
     Xp = stacked_flux[1:,:].T
 
     return DMD(X,Xp,modes)
 
 
-def DMD3(data,s_ind,e_ind,modes):
+def DMD3(data,s_ind,e_ind,modes,lifts=()):
 
     var1 = data[s_ind:e_ind,:,0]
     var2 = data[s_ind:e_ind,:,1]
@@ -83,7 +82,7 @@ def DMD3(data,s_ind,e_ind,modes):
 
     return DMD(X,Xp,modes)
 
-def DMDKPP(data,s_ind,e_ind,modes):
+def DMDKPP(data,s_ind,e_ind,modes,lifts=()):
 
     var = data[s_ind:e_ind,:,:]
 
@@ -92,7 +91,6 @@ def DMDKPP(data,s_ind,e_ind,modes):
 
     shape = var_flux.shape
     var_flux = var_flux.reshape(shape[0], shape[1] * shape[2])
-    lifts = ('cos','sin','quad','cube')
     var_flux = lift(var_flux,lifts)
 
     X = var_flux[:-1,:].T

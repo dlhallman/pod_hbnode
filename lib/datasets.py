@@ -78,21 +78,23 @@ class DMD_DATASET(Dataset):
         """DMD Model Reduction"""
         print('Reducing ... \t Modes: {}'.format(self.args.modes))
         if args.dataset == 'FIB':
-            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD1(self.data, args.tstart, args.tstop, args.modes)
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD1(self.data, args.tstart, args.tstop, args.modes, lifts=args.lifts)
         elif args.dataset == 'VKS':
             self.domain_len = self.shape[1]*self.shape[2]
             self.domain_shape = self.shape[1:-1]
             self.component_len = self.shape[-1]
-            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD2(self.data, args.tstart, args.tstop, args.modes)
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD2(self.data, args.tstart, args.tstop, args.modes, lifts=args.lifts)
             self.data = self.Phi.reshape(self.shape[-1],self.shape[1],self.shape[2],self.Phi.shape[1]).T
         elif args.dataset == 'EE':
+            self.component_len = self.shape[-1]
             self.domain_len = self.shape[1]
             self.domain_shape = [self.shape[1]]
-            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD3(self.data, args.tstart, args.tstop, args.modes)
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD3(self.data, args.tstart, args.tstop, args.modes, lifts=args.lifts)
         elif args.dataset == 'KPP': #flatten and use POD1
+            self.component_len = 1
             self.domain_len = self.shape[1]*self.shape[2]
             self.domain_shape = self.shape[1:]
-            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMDKPP(self.data, args.tstart, args.tstop, args.modes)
+            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMDKPP(self.data, args.tstart, args.tstop, args.modes, lifts=args.lifts)
         return 0
     """RECONSTRUCT FROM GIVEN DATA"""
     def reconstruct(self,time_shape=None):

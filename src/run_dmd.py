@@ -34,6 +34,8 @@ decomp_parser.add_argument('--tstop', type=int, default=101,
                     help='Stop time for reduction along time axis.' )
 decomp_parser.add_argument('--tpred', type=int, default=400,
                     help='Prediction time.' )
+decomp_parser.add_argument('--lifts', type=str, default='', nargs='+',
+                    help='Prediction time.' )
 uq_params = parser.add_argument_group('Unique Parameters')
 uq_params.add_argument('--verbose', type=bool, default=False,
                 help='To display output or not.')
@@ -55,21 +57,21 @@ set_outdir(args.out_dir, args)
 dmd = DMD_DATASET(args)
 
 """INITIALIZE"""
-Xk = np.array(dmd.X.T[0][:dmd.domain_len])
+Xk = np.array(dmd.X.T[0][:dmd.domain_len*dmd.component_len])
 
 """GENERATE PREDICTIONS"""
 for k in trange(1,args.tpred, desc='DMD Generation'):
     Lambda_k = np.linalg.matrix_power(dmd.Lambda,k)
-    xk=(dmd.Phi@Lambda_k@dmd.b)[:dmd.domain_len]
+    xk=(dmd.Phi@Lambda_k@dmd.b)[:dmd.domain_len*dmd.component_len]
     Xk=np.vstack((Xk,xk))
 
+"""RECONSTRUCTION"""
 Xk = np.array(Xk)
-
 dmd.data_recon = Xk
-
 dmd.reconstruct()
 
-if args.verbose: print("Generating Output ...\n",X.shape)
+"""OUTPUT"""
+if args.verbose: print("Generating Output ...\n",Xk.shape)
 eig_decay(dmd,args)
 data_reconstruct(dmd.data_recon.copy(),args.tpred-10,args)
 data_animation(dmd.data_recon,args)
