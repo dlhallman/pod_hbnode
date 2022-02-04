@@ -2,14 +2,18 @@
 import torch.nn as nn
 import torch
 
-from lib.utils import *
+from lib.utils.misc import *
+
+"""
+BASE NETWORKS
+    - Encoder: for VAE
+    - LatentODE: for rhs ode function
+    - Decoder: for VAE
+"""
 
 class Encoder(nn.Module):
-
     def __init__(self, latent_dim, obs_dim, hidden_units, hidden_layers):
         super(Encoder, self).__init__()
-
-        #VAE
         self.rnn = nn.GRU(obs_dim, hidden_units, hidden_layers, batch_first=True)
         self.h2o = nn.Linear(hidden_units, latent_dim * 2)
         
@@ -18,14 +22,12 @@ class Encoder(nn.Module):
         y = y[:, -1, :]
         y = self.h2o(y)
         return y
-class LatentODE(nn.Module):
 
+class LatentODE(nn.Module):
     def __init__(self, layers):
         super(LatentODE, self).__init__()
-
         self.act = nn.Tanh()
         self.layers = layers
-
         #FEED FORWARD
         arch = []
         for ind_layer in range(len(self.layers) - 2):
@@ -35,7 +37,6 @@ class LatentODE(nn.Module):
         layer = nn.Linear(self.layers[-2], self.layers[-1])
         layer.weight.data.fill_(0)
         arch.append(layer)
-
         #LIN OUT
         self.linear_layers = nn.ModuleList(arch)
         self.nfe = 0
@@ -48,12 +49,9 @@ class LatentODE(nn.Module):
         return y
 
 class Decoder(nn.Module):
-
     def __init__(self, latent_dim, obs_dim, hidden_units, hidden_layers):
         super(Decoder, self).__init__()
-
         self.act = nn.Tanh()
-        #SEQ2SEQ
         self.rnn = nn.GRU(latent_dim, hidden_units, hidden_layers, batch_first=True)
         self.h1 = nn.Linear(hidden_units, hidden_units - 5)
         self.h2 = nn.Linear(hidden_units - 5, obs_dim)
@@ -66,32 +64,30 @@ class Decoder(nn.Module):
         return y
 
 
-# Neural ODES
+"""
+NEURAL ODE NETWORKS
+    - Neural ODE: updates the hidden state h from h'=LatentODE
+    - Heavy-Ball Neural ODE: learns hidden state h from h'+gamma m=LatentODE
+
+"""
 class NODE(nn.Module):
     def __init__(self, df=None, **kwargs):
         super(NODE, self).__init__()
         self.__dict__.update(kwargs)
         self.df = df
         self.nfe = 0
-        self.elem_t = None
     def forward(self, t, x):
         self.nfe += 1
-        if self.elem_t is None:
-            return self.df(t, x)
-        else:
-            return self.elem_t * self.df(self.elem_t, x)
-    def update(self, elem_t):
-        self.elem_t = elem_t.view(*elem_t.shape, 1)
+        return self.df(t, x)
 
 
-
-class hbnode(NODE):
+class HBNODE(NODE):
     def __init__(self, df, actv_h=None, gamma_guess=-3.0, gamma_act='sigmoid', corr=-100, corrf=True):
         super().__init__(df)
         # Momentum parameter gamma
-        self.gamma = Parameter([gamma_guess], frozen=False)
+        self.gamma = Parameter([gamma_guess],frozen=False)
         self.gammaact = nn.Sigmoid() if gamma_act == 'sigmoid' else gamma_act
-        self.corr = Parameter([corr], frozen=corrf)
+        self.corr = Parameter([corr],frozen=False)
         self.sp = nn.Softplus()
         # Activation for dh, GHBNODE only
         self.actv_h = nn.Identity() if actv_h is None else actv_h
@@ -102,10 +98,4 @@ class hbnode(NODE):
         dm = self.df(t, h) - self.gammaact(self.gamma()) * m
         dm = dm + self.sp(self.corr()) * h
         out = torch.cat((dh, dm), dim=1)#.to(device)
-        if self.elem_t is None:
-            return out
-        else:
-            return self.elem_t * out
-
-    def update(self, elem_t):
-        self.elem_t = elem_t.view(*elem_t.shape, 1, 1)
+        return out

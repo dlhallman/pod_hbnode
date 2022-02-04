@@ -53,6 +53,7 @@ DATASETS
 """
 
 class DMD_DATASET(Dataset):
+<<<<<<< HEAD
     def __init__(self, args, modes=None):
         
             #ARGS
@@ -94,6 +95,7 @@ class DMD_DATASET(Dataset):
             self.domain_len = self.shape[1]*self.shape[2]
             self.domain_shape = self.shape[1:]
             self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMDKPP(self.data, args.tstart, args.tstop, args.modes, lifts=args.lifts)
+=======
   def __init__(self, args, modes=None):
     #ARGS
     self.args = args
