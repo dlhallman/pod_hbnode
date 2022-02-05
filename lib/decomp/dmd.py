@@ -53,7 +53,7 @@ def DMD2(data,s_ind,e_ind,modes,lifts=()):
 
     stacked_flux = np.hstack((var1_flux, var2_flux))
 
-    lifted_flux = lift(stacked_flux,lifts)
+    stacked_flux = lift(stacked_flux,lifts)
 
     X = stacked_flux[:-1,:].T
     Xp = stacked_flux[1:,:].T

@@ -26,11 +26,11 @@ def POD1(U, s_ind, e_ind, modes):
 
     return spatial_modes,temporal_coefficients,eig_vals,param_flux.copy()
 
-def POD2(U, s_ind, e_ind, modes):
+def POD2(data,s_ind,e_ind,modes):
     """ Computes the spatial modes and temporal coefficients using the POD """
     #Parameters
-    param1 = U[ s_ind:e_ind,:,:,0]
-    param2 = U[s_ind:e_ind,:,:, 1]
+    param1 = data[s_ind:e_ind,:,:,0]
+    param2 = data[s_ind:e_ind,:,:,1]
 
     param1_mean = np.mean(param1, axis=0)[np.newaxis, ...]
     param2_mean = np.mean(param2, axis=0)[np.newaxis, ...]
@@ -118,3 +118,20 @@ def PODKPP(data, s_ind, e_ind, modes):
     temporal_coefficients = np.matmul(var_flux, spatial_modes) #"throw sqrt of Lv onto temp_coef"
 
     return spatial_modes, temporal_coefficients, eigen_vals, var_flux.copy()
+
+"""RECONSTRUCT FROM MODES"""
+def pod_mode_to_true(dataset,modes,args):
+    spatial_modes = dataset.spatial_modes
+    true = np.matmul(modes,spatial_modes.T)
+
+    if args.dataset == "VKS":
+        if len(true.shape)>2:
+            true = true[0]
+        pod_x = true[:, :dataset.domain_len]
+        pod_y = true[:, dataset.domain_len:]
+
+        shape = [true.shape[0]] + list(dataset.domain_shape)
+        true_x = pod_x.reshape(shape)
+        true_y = pod_y.reshape(shape)
+        true = np.array([true_x.T,true_y.T])
+    return true.T
