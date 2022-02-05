@@ -644,4 +644,3 @@ def run_ee_dmd_recon(ee_t):
 ani = animation.FuncAnimation(fig, run_ee_dmd_recon, blit=True, interval=time_len,
     repeat=False)
 ani.save('./out/ee_dmd_recon.gif', "PillowWriter", fps=6)
-
