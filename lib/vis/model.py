@@ -1,27 +1,59 @@
 #IMPORTS
-import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import numpy as np
 import pandas as pd
 import sys
-import torch
 
 sys.path.append('../')
 from lib.datasets import * 
 from lib.utils import *
 from lib.vis import *
-from lib.seq.models import *
-import sci.lib.seq.parser as wparse
-
-# SETTINGS
-plt.rcParams['font.family'] = 'Times New Roman'
-DPI = 60
 
 ############################
 ### MODEL UNIVERSAL PLOTS ###
 ############################
+"""  LOSS PLOT """
+def plot_loss(fname,args):
+    plt.style.use('classic')
+    plt.rcParams['font.family']='Times New Roman'
+    plt.rcParams['xtick.minor.size']=0
+    plt.rcParams['ytick.minor.size']=0
+
+    with open(fname, 'r') as file:
+        df = pd.read_csv(file, index_col=False)
+    index_ = ['loss', 'va_loss']
+    color = ['k','r--']
+    losses = df[index_].values
+    plt.figure(tight_layout=True)
+    for i,loss in enumerate(losses.T):
+        plt.plot(loss,color[i],label=index_[i])
+    plt.legend()
+    plt.yscale('log')
+    end_str = str(args.out_dir+'/'+args.model+'_loss').lower()
+    plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
+    if args.verbose: plt.show()
+    return 1
+
+"""  NFE PLOT """
+def plot_nfe(fname,args):
+    plt.style.use('classic')
+    plt.rcParams['font.family']='Times New Roman'
+    plt.rcParams['xtick.minor.size']=0
+    plt.rcParams['ytick.minor.size']=0
+
+    with open(fname, 'r') as file:
+        df = pd.read_csv(file, index_col=False)
+    index_ = ['forward_nfe']
+    color = ['k','r--']
+    losses = df[index_].values
+    plt.figure(tight_layout=True)
+    plt.title(args.dataset+' '+args.model)
+    for i,loss in enumerate(losses.T):
+        plt.plot(loss,color[i],label=index_[i])
+    plt.legend()
+    end_str = str(args.out_dir+'/'+args.model+'_nfe').lower()
+    plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
+    if args.verbose: plt.show()
+    return 1
 
 """  ADJOINT GRADIENT PLOT """
 def plot_AdjGrad(fname,args, show=False):
@@ -35,46 +67,11 @@ def plot_AdjGrad(fname,args, show=False):
     plt.title(args.model+' Adjoint Gradient')
     plt.xlabel('Epoch')
     plt.ylabel('$T-t$')
+    
     plt.savefig(args.out_dir+'/'+args.model+'/AdjGrad.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
     return 1
 
-
-"""  LOSS PLOT """
-def plot_Loss(fname,args, clip=1, show=False):
-    with open(fname, 'r') as file:
-        df = pd.read_csv(file, index_col=False)
-    index_ = ['loss', 'va_loss']
-    color = ['k','r--']
-    losses = df[index_].values
-    plt.figure(tight_layout=True, dpi=DPI)
-    plt.title(args.dataset+' '+args.model)
-    for i,loss in enumerate(losses.T):
-        plt.plot(loss,color[i],label=index_[i])
-    plt.legend()
-    plt.yscale('log')
-    # yticks = [100/(10**i) for i in range(5)]
-    # plt.yticks(yticks)
-    plt.savefig(args.out_dir+'/'+args.model+'/LOSS.pdf', format="pdf", bbox_inches="tight")
-    if args.verbose: plt.show()
-    return 1
-
-
-"""  NFE PLOT """
-def plot_NFE(fname,args, clip=1, show=False):
-    with open(fname, 'r') as file:
-        df = pd.read_csv(file, index_col=False)
-    index_ = ['va_nfe']
-    color = ['k','r--']
-    losses = df[index_].values
-    plt.figure(tight_layout=True, dpi=DPI)
-    plt.title(args.dataset+' '+args.model)
-    for i,loss in enumerate(losses.T):
-        plt.plot(loss,color[i],label=index_[i])
-    plt.legend()
-    plt.savefig(args.out_dir+'/'+args.model+'/NFE.pdf', format="pdf", bbox_inches="tight")
-    if args.verbose: plt.show()
-    return 1
 
 
 """  STIFFNESS PLOT """
@@ -84,11 +81,12 @@ def plot_stiff(fname,args, clip=1, show=False):
     index_ = ['backward_stiff']
     color = ['k','r--']
     losses = df[index_].values
-    plt.figure(tight_layout=True, dpi=DPI)
+    plt.figure(tight_layout=True)
     plt.title(args.dataset+' '+args.model)
     for i,loss in enumerate(losses.T):
         plt.plot(loss,color[i],label=index_[i])
     plt.legend()
+    
     plt.savefig(args.out_dir+'/'+args.model+'/Stiffness.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
     return 1

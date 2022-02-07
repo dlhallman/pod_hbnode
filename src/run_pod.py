@@ -1,7 +1,7 @@
 #IMPORTS
 import argparse
 import numpy as np
-from tqdm import trange
+import warnings
 
 #SELF IMPORTS
 import sys
@@ -14,6 +14,9 @@ from lib.vis.animate import data_animation
 from lib.vis.modes import eig_decay, plot_mode
 from lib.vis.reconstruct import data_reconstruct
 
+#SETTINGS
+warnings.filterwarnings('ignore')
+
 
 """MODEL ARGUMENTS"""
 parser = argparse.ArgumentParser(prefix_chars='-+/',
@@ -21,6 +24,8 @@ parser = argparse.ArgumentParser(prefix_chars='-+/',
 data_parser = parser.add_argument_group('Data Parameters')
 data_parser.add_argument('--dataset', type=str, default='VKS',
                     help='Dataset types: [VKS, EE, FIB].')
+data_parser.add_argument('--load_file', type=str, default=None,
+                    help='Directory to load DMD data from.')
 data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
                     help='Directory of data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/',
@@ -52,7 +57,10 @@ set_outdir(args.out_dir, args)
 
 """LOAD DATA"""
 pod = POD_DATASET(args)
-
+if args.load_file is None:
+    pod.reduce()
+    pod.save_data(args.out_dir+'/pth/'+args.dataset+'_'+str(args.tstart)+'_'+str(args.tstop)+'_pod_'+str(args.modes)+'.npz')
+args = pod.args
 """RECONSTRUCTION"""
 pod.reconstruct()
 
@@ -61,4 +69,4 @@ if args.verbose: print("Generating Output ...")
 eig_decay(pod,args)
 data_reconstruct(pod.data_recon,args.tpred-1,args)
 data_animation(pod.data_recon,args)
-plot_mode(pod.data,args)
+plot_mode(pod.data[:,:4],np.arange(args.tstart,args.tstop),args)

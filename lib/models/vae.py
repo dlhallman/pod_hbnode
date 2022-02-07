@@ -2,7 +2,7 @@
 import torch.nn as nn
 import torch
 
-from lib.utils.misc import *
+from lib.utils.vae_helper import *
 
 """
 BASE NETWORKS
@@ -80,7 +80,6 @@ class NODE(nn.Module):
         self.nfe += 1
         return self.df(t, x)
 
-
 class HBNODE(NODE):
     def __init__(self, df, actv_h=None, gamma_guess=-3.0, gamma_act='sigmoid', corr=-100, corrf=True):
         super().__init__(df)
@@ -93,7 +92,7 @@ class HBNODE(NODE):
         self.actv_h = nn.Identity() if actv_h is None else actv_h
     def forward(self, t, x):
         self.nfe += 1
-        h, m = torch.split(x, 6, dim=1)
+        h, m = torch.split(x, x.shape[-1]//2, dim=1)
         dh = self.actv_h(- m)
         dm = self.df(t, h) - self.gammaact(self.gamma()) * m
         dm = dm + self.sp(self.corr()) * h

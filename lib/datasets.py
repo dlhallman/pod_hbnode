@@ -48,30 +48,25 @@ LOADERS = {'VKS':VKS_DAT, 'EE': EE_DAT, 'FIB' : FIB_DAT, 'KPP': KPP_DAT}
 
 """
 DATASETS
+    - BASE DATASETS
 """
-
 class DMD_DATASET(Dataset):
-    def __init__(self, args, modes=None):
-        #ARGS
+    def __init__(self, args):
         self.args = args
         assert args.dataset in LOADERS
 
-        #LOAD DATA 
         print('Loading ... \t Dataset: {}'.format(args.dataset))
         self.data_init = LOADERS[args.dataset](args.data_dir)
         self.data = self.data_init
         self.shape = self.data_init.shape
-
-        #DMD REDUCTION
-        if args.modes != None:
-            self.reduce()
-
-        self.time_len = self.X.shape[-1]
         self.data_recon=None
+
+        if not args.load_file is None:
+            self.load_file(args.load_file)
+            self._set_shapes()
 
     def reduce(self):
         args = self.args
-        """DMD Model Reduction"""
         print('Reducing ... \t Modes: {}'.format(self.args.modes))
         if args.dataset == 'FIB':
             self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD1(self.data, args.tstart, args.tstop, args.modes, lifts=args.lifts)
@@ -79,8 +74,8 @@ class DMD_DATASET(Dataset):
             self.domain_len = self.shape[1]*self.shape[2]
             self.domain_shape = self.shape[1:-1]
             self.component_len = self.shape[-1]
-            self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMD2(self.data, args.tstart, args.tstop, args.modes, lifts=args.lifts)
-            self.data = self.Phi.reshape(self.shape[-1],self.shape[1],self.shape[2],self.Phi.shape[1]).T
+            self.X,self.Atilde,self.Ur,self.Phi,self.Lambda,self.lv,self.b=DMD2(self.data, args.tstart, args.tstop, args.modes, lifts=args.lifts)
+            self.data = self.Phi.reshape([self.shape[-1]]+list(self.shape[1:-1])+[len(args.lifts)+1]+[args.modes]).T
         elif args.dataset == 'EE':
             self.component_len = self.shape[-1]
             self.domain_len = self.shape[1]
@@ -91,7 +86,9 @@ class DMD_DATASET(Dataset):
             self.domain_len = self.shape[1]*self.shape[2]
             self.domain_shape = self.shape[1:]
             self.X, self.Atilde, self.Ur, self.Phi, self.Lambda, self.lv, self.b = DMDKPP(self.data, args.tstart, args.tstop, args.modes, lifts=args.lifts)
-    """RECONSTRUCT FROM GIVEN DATA"""
+        self.time_len = self.X.shape[-1]
+        return 1
+
     def reconstruct(self,time_shape=None):
       args = self.args
       if self.data_recon is None:
@@ -100,10 +97,7 @@ class DMD_DATASET(Dataset):
           time_shape=args.tpred
       end_shape = [time_shape]+list(self.domain_shape)
 
-      #POD CALL
-      if args.dataset == 'FIB':
-          return 0
-      elif args.dataset == 'VKS':
+      if args.dataset == 'VKS':
           var1_xk = np.real(self.data_recon[:,:self.domain_len].reshape(end_shape))
           var2_xk = np.real(self.data_recon[:,self.domain_len:].reshape(end_shape))
           self.data_recon = np.moveaxis(np.array((var1_xk,var2_xk)),0,-1)
@@ -114,40 +108,68 @@ class DMD_DATASET(Dataset):
           self.data_recon = np.moveaxis(np.array((var1_xk,var2_xk,var3_xk)),0,-1)
       elif args.dataset == 'KPP': #flatten and use POD1
           self.data_recon=np.real(self.data_recon.reshape(end_shape))
+      return 1
+
+    def save_data(self,file_str):
+        print('Saving ... \t '+file_str)
+        np.savez(file_str.lower(),[self.args,self.data,self.X,self.Atilde,self.Ur,self.Phi,self.Lambda,self.lv,self.b,self.args.lifts],dtype=object)
+        return 1
+
+    def load_file(self,file_str):
+        print('Loading ... \t '+file_str)
+        self.args,self.data,self.X,self.Atilde,self.Ur,self.Phi,self.Lambda, \
+            self.lv,self.b,self.lifts = np.load(file_str,allow_pickle=True)['arr_0']
+        return 1
+                
+    def _set_shapes(self):
+        args = self.args
+        if args.dataset == 'VKS':
+            self.domain_len = self.shape[1]*self.shape[2]
+            self.domain_shape = self.shape[1:-1]
+            self.component_len = self.shape[-1]
+        elif args.dataset == 'EE':
+            self.component_len = self.shape[-1]
+            self.domain_len = self.shape[1]
+            self.domain_shape = [self.shape[1]]
+        elif args.dataset == 'KPP':
+            self.component_len = 1
+            self.domain_len = self.shape[1]*self.shape[2]
+            self.domain_shape = self.shape[1:]
+        self.time_len = self.X.shape[-1]
+        return 1
 
     def __len__(self):
       return self.time_len
 
-    def __shape(self):
+    def __shape__(self):
       return self.domain_shape
 
-    def __get_item(self,idx):
+    def __get_item__(self,idx):
       return None,None
 
 
 class POD_DATASET(Dataset):
-    def __init__(self, args, modes=None):
-        #ARGS
+    def __init__(self, args):
         self.args = args
         assert args.dataset in LOADERS
 
-        #LOAD DATA 
         print('Loading ... \t Dataset: {}'.format(args.dataset))
         self.data_init = LOADERS[args.dataset](args.data_dir)
         self.data = self.data_init.copy()
         self.shape = self.data_init.shape
-        args.tstop = min(args.tstop,self.data_init.shape[0])
-
-        #POD REDUCTION
-        if args.modes != None:
-            self.reduce()
 
         self.time_len = self.data.shape[0]
         self.data_recon=None
 
+        if not args.load_file is None:
+            self.load_file(args.load_file)
+            self._set_shapes()
+
+        args = self.args
+        args.tstop = min(args.tstop,self.data_init.shape[0])
+
     def reduce(self):
         args = self.args
-        """POD Model Reduction"""
         print('Reducing ... \t Modes: {}'.format(self.args.modes))
         if args.dataset == 'VKS':
             self.domain_len = self.shape[1]*self.shape[2]
@@ -159,41 +181,68 @@ class POD_DATASET(Dataset):
             self.domain_len = self.shape[1]
             self.domain_shape = [self.shape[1]]
             self.spatial_modes, self.data, self.lv, self.rho_flux, self.v_flux, self.e_flux = POD3(self.data, args.tstart, args.tstop, args.modes)
-        elif args.dataset == 'KPP': #flatten and use POD1
+        elif args.dataset == 'KPP':
             self.component_len = 1
             self.domain_len = self.shape[1]*self.shape[2]
             self.domain_shape = self.shape[1:]
             self.spatial_modes, self.data, self.lv, self.h = PODKPP(self.data, args.tstart, args.tstop, args.modes)
-    """RECONSTRUCT FROM GIVEN DATA"""
+
     def reconstruct(self):
-      args = self.args
       self.data_recon = pod_mode_to_true(self,self.data,self.args)
+
+    def save_data(self,file_str):
+        args=self.args
+        print('Saving ... \t '+file_str)
+        if args.dataset == 'VKS':
+            np.savez(file_str.lower(),[self.args,self.spatial_modes,self.data,self.lv,self.ux_flux,self.uy_flux],dtype=object)
+        elif args.dataset == 'EE':
+            np.savez(file_str.lower(),[self.args,self.spatial_modes,self.data,self.lv,self.rho_flux,self.v_flux,self.e_flux],dtype=object)
+        elif args.dataset == 'KPP':
+            np.savez(file_str.lower(),[self.args,self.spatial_modes,self.data,self.lv,self.h],dtype=object)
+        return 1
+
+    def load_file(self,file_str):
+        args=self.args
+        print('Loading ... \t '+file_str)
+        if args.dataset == 'VKS':
+            self.args,self.spatial_modes,self.data,self.lv,self.ux_flux,self.uy_flux = np.load(file_str,allow_pickle=True)['arr_0']
+        elif args.dataset == 'EE':
+            self.args,self.spatial_modes,self.data,self.lv,self.rho_flux,self.v_flux,self.e_flux = np.load(file_str,allow_pickle=True)['arr_0']
+        elif args.dataset == 'KPP':
+            self.args,self.spatial_modes,self.data,self.lv,self.h = np.load(file_str,allow_pickle=True)['arr_0']
+        return 1
+                
+    def _set_shapes(self):
+        args = self.args
+        if args.dataset == 'VKS':
+            self.domain_len = self.shape[1]*self.shape[2]
+            self.domain_shape = self.shape[1:-1]
+            self.component_len = self.shape[-1]
+        elif args.dataset == 'EE':
+            self.component_len = self.shape[-1]
+            self.domain_len = self.shape[1]
+            self.domain_shape = [self.shape[1]]
+        elif args.dataset == 'KPP':
+            self.component_len = 1
+            self.domain_len = self.shape[1]*self.shape[2]
+            self.domain_shape = self.shape[1:]
+        return 1
 
     def __len__(self):
       return self.time_len
 
-    def __shape(self):
+    def __shape__(self):
       return self.domain_shape
 
-    def __get_item(self,idx):
+    def __get_item__(self,idx):
       return None,None
 
 class VAE_DATASET():
-    def __init__(self, args, modes=None):
+    def __init__(self, args):
     
-        #ARGS
-        assert args.dataset in LOADERS
-        #DATA CONFIGS
-        self.args = args
-
-        print('Loading ... \t Dataset: {}'.format(args.dataset))
-        self.data_init = LOADERS[args.dataset](args.data_dir)
-        self.data = self.data_init.copy()
-        self.shape = self.data_init.shape
-        self.time_len = self.shape[0]
-
-        if args.modes != None:
-            self.reduce()
+        self.pod_dataset = POD_DATASET(args)
+        self.data = self.pod_dataset.data
+        self.data_args = self.pod_dataset.args
 
         #DATA SPLITTNG
         self.train_data = self.data[:args.tr_ind, :]
@@ -225,23 +274,6 @@ class VAE_DATASET():
         self.eval_times = torch.from_numpy(eval_times).float()
         self.train_times = self.eval_times[:args.tr_ind]
         self.valid_times = self.eval_times[:args.val_ind]
-
-    """POD Model Reduction"""
-    def reduce(self):
-        args = self.args
-        print('Reducing ... \t Modes: {}'.format(args.modes))
-        if args.dataset == 'FIB':
-            self.spatial_modes, self.data, self.lv, self.h = POD1(self.data_init, args.tstart, args.tstop, args.modes)
-        elif args.dataset == 'VKS':
-            self.domain_len = self.shape[1]*self.shape[2]
-            self.domain_shape = self.shape[1:-1]
-            self.component_len = self.shape[-1]
-            self.spatial_modes, self.data, self.lv, self.ux, self.uy = POD2(self.data, args.tstart, args.tstop, args.modes)
-        elif args.dataset == 'EE':
-            self.spatial_modes, self.data, self.lv, self.rho, self.v, self.e = POD3(self.data, args.tstart, args.tstop, args.modes)
-        elif args.dataset == 'KPP': #flatten and use POD1
-            self.spatial_modes, self.data, self.lv, self.h = PODKPP(self.data, args.tstart, args.tstop, args.modes)
-        return 1
 
 class SEQ_LOADER:
     def __init__(self, args):

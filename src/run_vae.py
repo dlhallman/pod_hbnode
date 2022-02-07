@@ -10,10 +10,13 @@ import sys
 sys.path.append('./')
 
 from lib.datasets import VAE_DATASET
+from lib.decomp.pod import pod_mode_to_true
 from lib.models.vae import *
-from lib.utils.misc import *
-from lib.vis.modes import *
+from lib.utils.misc import set_outdir, Recorder
+from lib.utils.vae_helper import *
 from lib.vis.animate import data_animation
+from lib.vis.modes import mode_prediction
+from lib.vis.model import plot_loss, plot_nfe
 from lib.vis.reconstruct import data_reconstruct
 
 
@@ -24,17 +27,14 @@ parser = argparse.ArgumentParser(prefix_chars='-+/',
 data_parser = parser.add_argument_group('Data Parameters')
 data_parser.add_argument('--dataset', type=str, default='VKS',
                     help='Dataset types: [VKS, EE].')
-data_parser.add_argument('--data_dir', type=str, default='data/VKS.pkl',
+data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
                     help='Directory of data from cwd: sci.')
-data_parser.add_argument('--out_dir', type=str, default='out/',
+data_parser.add_argument('--load_file', type=str,
+                    default='./out/nonT_pred/pth/vks_100_200_pod_8.npz',
+                    help='Directory of pod data from cwd: sci.')
+data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred',
                     help='Directory of output from cwd: sci.')
-data_parser.add_argument('--modes', type = int, default =8,
-                    help = 'POD reduction modes.\nNODE model parameters.')
-data_parser.add_argument('--tstart', type = int, default=100,
-                    help='Start time for reduction along time axis.')
-data_parser.add_argument('--tstop', type=int, default=400,
-                    help='Stop time for reduction along time axis.' )
-data_parser.add_argument('--tr_ind', type = int, default=75,
+data_parser.add_argument('--tr_ind', type = int, default=80,
                     help='Time index for training data.')
 data_parser.add_argument('--val_ind', type=int, default=100,
                     help='Time index for validation data.' )
@@ -51,7 +51,7 @@ model_parser.add_argument('--layers_enc', type=int, default=4,
 model_parser.add_argument('--units_enc', type=int, default=10,
                     help='Encoder units.')
 model_parser.add_argument('--layers_node', type=list, default=[12],
-                help='NODE Layers.')
+                nargs='+', help='NODE Layers.')
 model_parser.add_argument('--units_dec', type=int, default=41,
                     help='Training iterations.')
 model_parser.add_argument('--layers_dec', type=int, default=4,
@@ -88,6 +88,9 @@ MODELS = {'NODE' : NODE(df = LatentODE(layers_node)),
 
 if args.model == "HBNODE":
     latent_dim = latent_dim*2
+
+
+rec = Recorder()
 #NETWORKS
 enc = Encoder(latent_dim, obs_dim, args.units_enc, args.layers_enc)
 node = MODELS[args.model]
@@ -108,7 +111,8 @@ lossVal = []
 
 #TRAINING
 print('Training ... \t Iterations: {}'.format(args.epochs))
-for itr in trange(1, args.epochs + 1):
+for epoch in trange(1, args.epochs + 1):
+    rec['epoch'] = epoch
 
     optimizer.zero_grad()
 
@@ -118,6 +122,7 @@ for itr in trange(1, args.epochs + 1):
     scheduler.step(metrics=loss_meter_t.avg)
 
     #FORWARD STEP
+    node.nfe=0
     out_enc = enc.forward(vae.obs_t)
     qz0_mean, qz0_logvar = out_enc[:, :latent_dim], out_enc[:, latent_dim:]
     epsilon = torch.randn(qz0_mean.size())
@@ -131,13 +136,17 @@ for itr in trange(1, args.epochs + 1):
                             pz0_mean, pz0_logvar).sum(-1)
     kl_loss = torch.mean(analytic_kl, dim=0)
     loss = criterion(output_vae_t, vae.train_data) + kl_loss
+    rec['loss'] = loss
+    rec['forward_nfe'] = node.nfe
 
     #BACK PROP
+    node.nfe = 0
     loss.backward()
     optimizer.step()
     loss_meter_t.update(loss.item())
     meter_train.update(loss.item() - kl_loss.item())
     lossTrain.append(meter_train.avg)
+    rec['backward_nfe'] = node.nfe
 
     #VALIDATION
     with torch.no_grad():
@@ -146,6 +155,7 @@ for itr in trange(1, args.epochs + 1):
         node.eval()
         dec.eval()
 
+        node.nfe = 0
         zv = odeint(node, z0, vae.valid_times, method='rk4').permute(1, 0, 2)
         output_vae_v = dec(zv)
 
@@ -155,18 +165,24 @@ for itr in trange(1, args.epochs + 1):
         meter_valid.update(loss_v.item())
         lossVal.append(meter_valid.avg)
 
+        rec['va_nfe'] = node.nfe
+        rec['va_loss'] = loss_v
+
         enc.train()
         node.train()
         dec.train()
 
     #OUTPUT
-    if itr % args.epochs == 0:
+    if epoch % args.epochs == 0:
         output_vae = (output_vae_v.cpu().detach().numpy()) * vae.std_data + vae.mean_data
-    if np.isnan(lossTrain[itr - 1]):
+    if np.isnan(lossTrain[epoch - 1]):
         break
+    rec.capture(verbose=False)
 
 
 #SAVE MODEL DATA
+rec_file = args.out_dir+ './pth/'+args.model+'.csv'
+rec.writecsv(rec_file)
 torch.save(enc.state_dict(), args.out_dir + './pth/enc.pth')
 torch.save(node.state_dict(), args.out_dir + './pth/node.pth')
 torch.save(dec.state_dict(), args.out_dir + './pth/dec.pth')
@@ -190,7 +206,6 @@ data_NODE = (output_vae_e.cpu().detach().numpy()) * vae.std_data + vae.mean_data
 with open(args.out_dir + './pth/vae_'+args.model+'_modes.pth', 'wb') as f:
     pickle.dump(data_NODE, f)
 
-eig_decay(vae,args)
 #INVERT OVER TIME
 idx = [i for i in range(vae.valid_data.size(0) - 1, -1, -1)]
 idx = torch.LongTensor(idx)
@@ -201,8 +216,19 @@ epsilon = torch.randn(qz0_mean.size())
 z0 = epsilon * torch.exp(.5 * qz0_logvar) + qz0_mean
 zt = odeint(node, z0, vae.valid_times, method='rk4').permute(1, 0, 2)
 predictions = dec(zt).detach().numpy()
+
+args.modes = vae.data_args.modes
+args.model = str('vae_'+args.model).lower()
 normalized = (predictions*vae.std_data+vae.mean_data)
-mode_prediction(vae,predictions,vae.valid_data,np.arange(args.tstart,args.val_ind),args)
-val_recon = pod_mode_to_true(vae,predictions,args)
-data_reconstruct(val_recon,-1,args)
+times = np.arange(vae.data_args.tstart,vae.data_args.tstart+args.val_ind)
+print(normalized.shape)
+#DATA PLOTS
+verts = [vae.data_args.tstart+args.tr_ind]
+mode_prediction(normalized[:,:,:4],vae.data[:times[-1]-1],times,verts,args)
+val_recon = pod_mode_to_true(vae.pod_dataset,normalized,args)
+data_reconstruct(val_recon,args.val_ind-1,args)
 data_animation(val_recon,args)
+
+#MODEL PLOTS
+plot_loss(rec_file, args)
+plot_nfe(rec_file, args)

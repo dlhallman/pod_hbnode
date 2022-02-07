@@ -2,6 +2,7 @@
 import argparse
 import numpy as np
 from tqdm import trange
+import warnings
 
 #SELF IMPORTS
 import sys
@@ -14,6 +15,8 @@ from lib.vis.animate import data_animation
 from lib.vis.modes import eig_decay
 from lib.vis.reconstruct import data_reconstruct
 
+#SETTINGS
+warnings.filterwarnings('ignore')
 
 """MODEL ARGUMENTS"""
 parser = argparse.ArgumentParser(prefix_chars='-+/',
@@ -21,6 +24,8 @@ parser = argparse.ArgumentParser(prefix_chars='-+/',
 data_parser = parser.add_argument_group('Data Parameters')
 data_parser.add_argument('--dataset', type=str, default='VKS',
                     help='Dataset types: [VKS, EE, FIB].')
+data_parser.add_argument('--load_file', type=str, default=None,
+                    help='Directory to load DMD data from.')
 data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
                     help='Directory of data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/',
@@ -41,9 +46,6 @@ uq_params.add_argument('--verbose', type=bool, default=False,
                 help='To display output or not.')
 args, unknown = parser.parse_known_args()
 
-assert(args.tpred>args.tstop)
-assert(args.tstop-args.tstart>args.modes)
-
 if args.verbose:
     print('Parsed Arguments')
     for arg in vars(args):
@@ -55,6 +57,10 @@ set_outdir(args.out_dir, args)
 
 """LOAD DATA"""
 dmd = DMD_DATASET(args)
+if args.load_file is None:
+    dmd.reduce()
+    dmd.save_data(args.out_dir+'/pth/'+args.dataset+'_'+str(args.tstart)+'_'+str(args.tstop)+'_dmd_'+str(args.modes)+'.npz')
+args = dmd.args
 
 """INITIALIZE"""
 Xk = np.array(dmd.X.T[0][:dmd.domain_len*dmd.component_len])
@@ -73,5 +79,5 @@ dmd.reconstruct()
 """OUTPUT"""
 if args.verbose: print("Generating Output ...\n",Xk.shape)
 eig_decay(dmd,args)
-data_reconstruct(dmd.data_recon.copy(),args.tpred-10,args)
+data_reconstruct(dmd.data_recon.copy(),args.tpred-1,args)
 data_animation(dmd.data_recon,args)

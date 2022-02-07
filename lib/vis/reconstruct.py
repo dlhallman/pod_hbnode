@@ -2,14 +2,8 @@
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
-import sys
 
-plt.rcParams['font.family'] = 'Times New Roman'
-# plt.rcParams['font.size'] = 28
-plt.rcParams['xtick.minor.size'] = 0
-plt.rcParams['ytick.minor.size'] = 0
 padding=15
-
 
 #######################
 ### RECONSTRUCTIONS ###
