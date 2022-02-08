@@ -112,7 +112,7 @@ class DMD_DATASET(Dataset):
 
     def save_data(self,file_str):
         print('Saving ... \t '+file_str)
-        np.savez(file_str.lower(),[self.args,self.data,self.X,self.Atilde,self.Ur,self.Phi,self.Lambda,self.lv,self.b,self.args.lifts],dtype=object)
+        np.savez(file_str,[self.args,self.data,self.X,self.Atilde,self.Ur,self.Phi,self.Lambda,self.lv,self.b,self.args.lifts],dtype=object)
         return 1
 
     def load_file(self,file_str):
@@ -194,11 +194,11 @@ class POD_DATASET(Dataset):
         args=self.args
         print('Saving ... \t '+file_str)
         if args.dataset == 'VKS':
-            np.savez(file_str.lower(),[self.args,self.spatial_modes,self.data,self.lv,self.ux_flux,self.uy_flux],dtype=object)
+            np.savez(file_str,[self.args,self.spatial_modes,self.data,self.lv,self.ux_flux,self.uy_flux],dtype=object)
         elif args.dataset == 'EE':
-            np.savez(file_str.lower(),[self.args,self.spatial_modes,self.data,self.lv,self.rho_flux,self.v_flux,self.e_flux],dtype=object)
+            np.savez(file_str,[self.args,self.spatial_modes,self.data,self.lv,self.rho_flux,self.v_flux,self.e_flux],dtype=object)
         elif args.dataset == 'KPP':
-            np.savez(file_str.lower(),[self.args,self.spatial_modes,self.data,self.lv,self.h],dtype=object)
+            np.savez(file_str,[self.args,self.spatial_modes,self.data,self.lv,self.h],dtype=object)
         return 1
 
     def load_file(self,file_str):

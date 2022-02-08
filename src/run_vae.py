@@ -20,6 +20,7 @@ from lib.vis.model import plot_loss, plot_nfe
 from lib.vis.reconstruct import data_reconstruct
 
 
+
 """INPUT ARGUMETNS"""
 parser = argparse.ArgumentParser(prefix_chars='-+/',
     description='[NODE] NODE parameters.')
@@ -62,6 +63,8 @@ model_parser.add_argument('--factor', type=float, default=0.95,
                     help = 'Factor for reducing learning rate.')
 #UNIQUE PARAMS
 uq_params = parser.add_argument_group('Unique Parameters')
+uq_params.add_argument('--seed', type=int, default=0,
+                help='Set initialization seed')
 uq_params.add_argument('--verbose', type=bool, default=False,
                 help='Display full NN and all plots.')
 #PARSE
@@ -72,6 +75,9 @@ if args.verbose:
         print('\t',arg, getattr(args, arg))
 
 """INITIALIZE"""
+#SETTNGS
+np.random.seed(args.seed)
+torch.manual_seed(args.seed)
 #FORMAT OUTDIR
 set_outdir(args.out_dir, args)
 #LOAD DATA

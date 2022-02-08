@@ -28,7 +28,7 @@ def plot_loss(fname,args):
         plt.plot(loss,color[i],label=index_[i])
     plt.legend()
     plt.yscale('log')
-    end_str = str(args.out_dir+'/'+args.model+'_loss').lower()
+    end_str = str(args.out_dir+'/'+args.model+'_loss')
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
     return 1
@@ -50,7 +50,7 @@ def plot_nfe(fname,args):
     for i,loss in enumerate(losses.T):
         plt.plot(loss,color[i],label=index_[i])
     plt.legend()
-    end_str = str(args.out_dir+'/'+args.model+'_nfe').lower()
+    end_str = str(args.out_dir+'/'+args.model+'_nfe')
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
     return 1

@@ -59,7 +59,7 @@ set_outdir(args.out_dir, args)
 pod = POD_DATASET(args)
 if args.load_file is None:
     pod.reduce()
-    pod.save_data(args.out_dir+'/pth/'+args.dataset+'_'+str(args.tstart)+'_'+str(args.tstop)+'_pod_'+str(args.modes)+'.npz')
+    pod.save_data(args.out_dir+'/pth/'+args.dataset.lower()+'_'+str(args.tstart)+'_'+str(args.tstop)+'_pod_'+str(args.modes)+'.npz')
 args = pod.args
 """RECONSTRUCTION"""
 pod.reconstruct()

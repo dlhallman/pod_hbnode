@@ -59,7 +59,7 @@ set_outdir(args.out_dir, args)
 dmd = DMD_DATASET(args)
 if args.load_file is None:
     dmd.reduce()
-    dmd.save_data(args.out_dir+'/pth/'+args.dataset+'_'+str(args.tstart)+'_'+str(args.tstop)+'_dmd_'+str(args.modes)+'.npz')
+    dmd.save_data(args.out_dir+'/pth/'+args.dataset.lower()+'_'+str(args.tstart)+'_'+str(args.tstop)+'_dmd_'+str(args.modes)+'.npz')
 args = dmd.args
 
 """INITIALIZE"""
