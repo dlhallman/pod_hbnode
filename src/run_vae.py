@@ -230,7 +230,7 @@ times = np.arange(vae.data_args.tstart,vae.data_args.tstart+args.val_ind)
 print(normalized.shape)
 #DATA PLOTS
 verts = [vae.data_args.tstart+args.tr_ind]
-mode_prediction(normalized[:,:,:4],vae.data[:times[-1]-1],times,verts,args)
+mode_prediction(normalized[-1,:,:4],vae.data[:times[-1]-1],times,verts,args)
 val_recon = pod_mode_to_true(vae.pod_dataset,normalized,args)
 data_reconstruct(val_recon,args.val_ind-1,args)
 data_animation(val_recon,args)

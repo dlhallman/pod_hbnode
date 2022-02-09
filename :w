@@ -1,16 +1,15 @@
 #IMPORTS
 import argparse
-import numpy as np
-import time
 from torchdiffeq import odeint
 import torch.optim as optim
 from tqdm import tqdm,trange
+import numpy as np
 
 
 import sys
 sys.path.append('./')
 
-from lib.datasets import SEQ_DATASET
+from lib.datasets import VAE_DATASET
 from lib.decomp.pod import pod_mode_to_true
 from lib.models.seq import *
 from lib.utils.misc import set_outdir, Recorder
@@ -37,9 +36,13 @@ data_parser.add_argument('--load_file', type=str,
                     help='Directory of pod data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred',
                     help='Directory of output from cwd: sci.')
-data_parser.add_argument('--tr_win', type=int, default=80,
+data_parser.add_argument('--tr_ind', type = int, default=80,
+                    help='Time index for training data.')
+data_parser.add_argument('--val_ind', type=int, default=100,
+                    help='Time index for validation data.' )
+data_parser.add_argument('--tr_win', type=int, default=100,
                 help='Time index for validation data.' )
-data_parser.add_argument('--val_win', type=int, default=100,
+data_parser.add_argument('--val_win', type=int, default=125,
                 help='Time index for validation data.' )
 
 #MODEL PARAMS
@@ -68,10 +71,6 @@ train_params.add_argument('--patience', type=int, default=5,
                     help = 'Initial learning rate.')
 #UNIQUE PARAMS
 uq_params = parser.add_argument_group('Unique Parameters')
-uq_params.add_argument('--device', type=str, default='cpu',
-                help='Set default torch hardware device.')
-uq_params.add_argument('--seed', type=int, default=0,
-                help='Set initialization seed')
 uq_params.add_argument('--verbose', type=bool, default=False,
                 help='Number of display modes.')
 
@@ -90,8 +89,8 @@ torch.manual_seed(args.seed)
 #FORMAT OUTDIR
 set_outdir(args.out_dir, args)
 #LOAD DATA
-seq = SEQ_DATASET(args)
-args.modes = seq.data_args.modes
+vae = SEQ_DATASET(args)
+
 
 
 MODELS = {'NODE' : NMODEL(args),'HBNODE' : HBMODEL(args, res=True, cont=True), 'GHBNODE' : GHBMODEL(args, res=True, cont=True)}
@@ -131,6 +130,7 @@ for epoch in trange(args.epochs):
     #BATCHING
     for b_n in range(0, seq.train_data.shape[1], batchsize):
         model.cell.nfe = 0
+        model.cell.nfe = 0
         predict = model(seq.train_times[:, b_n:b_n + batchsize], seq.train_data[:, b_n:b_n + batchsize])
         loss = criteria(predict, seq.train_label[:, b_n:b_n + batchsize])
         loss_meter_t.update(loss.item())
@@ -164,40 +164,30 @@ for epoch in trange(args.epochs):
         rec['va_loss'] = vloss
 
     #TEST
-#    if epoch == 0 or (epoch + 1) % 5 == 0:
-#        model.cell.nfe = 0
-#        predict = model(seq.eval_times, seq.eval_data)
-#        sloss = criteria(predict, seq.eval_label)
-#        sloss = sloss.detach().cpu().numpy()
-#        rec['ts_nfe'] = model.cell.nfe
-#        rec['ts_stiff'] = model.cell.stiff
-#        rec['ts_loss'] = sloss
+    if epoch == 0 or (epoch + 1) % 5 == 0:
+        model.cell.nfe = 0
+        predict = model(seq.eval_times, seq.eval_data)
+        sloss = criteria(predict, seq.eval_label)
+        sloss = sloss.detach().cpu().numpy()
+        rec['ts_nfe'] = model.cell.nfe
+        rec['ts_stiff'] = model.cell.stiff
+        rec['ts_loss'] = sloss
 
     #OUTPUT
     rec.capture(verbose=False)
     if (epoch + 1) % 5 == 0:
         torch.save(model, args.out_dir+'/pth/{}.mdl'.format(args.model))
         rec.writecsv(args.out_dir+'/pth/{}.csv'.format(args.model))
-
-
 print("Generating Output ... ")
-args.modes = seq.data_args.modes
-args.model = str('seq'+args.model).lower()
-predictions = model(seq.valid_times, seq.valid_data).cpu().detach().numpy()
-normalized = (predictions*seq.std_data+seq.mean_data)
-times = np.arange(seq.data_args.tstart,seq.data_args.tstart+args.val_ind)
-#DATA PLOTS
-verts = [seq.data_args.tstart+args.tr_ind]
-mode_prediction(normalized[-1,:,:4],seq.data[:times[-1]-1],times,verts,args)
-val_recon = pod_mode_to_true(seq.pod_dataset,normalized,args)
-data_reconstruct(val_recon,args.val_ind-1,args)
-data_animation(val_recon,args)
-
-#MODEL PLOTS
-plot_loss(rec_file, args)
-plot_nfe(rec_file, args)
 plot_AdjGrad(args.out_dir+'/pth/{}.csv'.format(args.model),args)
+plot_Loss(args.out_dir+'/pth/{}.csv'.format(args.model),args)
 plot_stiff(args.out_dir+'/pth/{}.csv'.format(args.model),args)
+plot_NFE(args.out_dir+'/pth/{}.csv'.format(args.model),args)
+plot_Modes(seq, model, args)
+plot_ModesLong(seq, model, args)
+# plot_Reconstruction(seq, model, args)
+# plot_Anim(seq, model, args)
+eig_decay(seq, args)
 predictions = model(seq.valid_times, seq.valid_data).cpu().detach().numpy()
 val_recon = pod_mode_to_true(seq,predictions,args)
 data_reconstruct(val_recon,-1,args,heat=True)

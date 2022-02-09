@@ -5,7 +5,7 @@ from einops import rearrange
 from torch import device, nn
 from torchdiffeq import odeint_adjoint, odeint
 
-from lib.utils.misc import *
+from lib.utils.seq_helper import *
 
 EPS = 1e-3
 DEVICE = 'cpu'

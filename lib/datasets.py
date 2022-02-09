@@ -275,85 +275,49 @@ class VAE_DATASET():
         self.train_times = self.eval_times[:args.tr_ind]
         self.valid_times = self.eval_times[:args.val_ind]
 
-class SEQ_LOADER:
+class SEQ_DATASET:
     def __init__(self, args):
-        assert args.dataset in LOADERS
-        #DATA CONFIG
-        self.dataset = args.dataset
-        self.data_dir = args.data_dir
-        self.modes = args.modes
-        self.tstart = args.tstart
-        self.tstop = args.tstop
-        #SPLIT CONFIG
-        self.batch_size = args.batch_size
-        self.seq_win = args.seq_win
-        self.tr_win = args.tr_win
-        self.val_win = args.val_win
-        self.device = args.device
+    
+        self.pod_dataset = POD_DATASET(args)
+        self.data = self.pod_dataset.data
+        self.data_args = self.pod_dataset.args
 
-        print('Loading ... \t Dataset: {}'.format(self.dataset))
-        self.data_init = LOADERS[self.dataset](args.data_dir, args.paramEE)
-        self.data = self.data_init
-        self.shape = self.data_init.shape
-        self.time_len = self.shape[0]
-
-        if self.modes != None:
-            self.reduce()
-        total_size = self.data.shape[0] - self.seq_win
-        args.tstop = min(args.tstop, self.data.shape[0]+args.tstart-1)
+        total_size = self.data.shape[0] - args.seq_win
         
         #SEQUENCE DATA
-        total_size = self.data.shape[0] - self.seq_win
-        #SEQUENCE DATA
-        seq_data = np.vstack([[self.data[t:t + self.seq_win, :] for t in range(total_size-1)]]).swapaxes(0,1)
-        seq_label = np.vstack([[self.data[t+1:t+self.seq_win+1, :] for t in range(total_size-1)]]).swapaxes(0,1)
-        tr_win = self.tr_win
-        val_win = self.val_win
+        seq_data = np.vstack([[self.data[t:t + args.seq_win, :] for t in range(total_size)]]).swapaxes(0,1)
+        seq_label = np.vstack([[self.data[t+1:t+args.seq_win+1, :] for t in range(total_size)]]).swapaxes(0,1)
+        tr_win = args.tr_win
+        val_win = args.val_win
         self.seq_data = seq_data
         self.seq_label = seq_label
                 
         # training data
-        train_data = seq_data[:, :tr_win-self.seq_win, :]
-        train_label = seq_label[:, :tr_win-self.seq_win, :]
+        train_data = seq_data[:, :tr_win-args.seq_win, :]
+        train_label = seq_label[:, :tr_win-args.seq_win, :]
         self.train_data =  torch.FloatTensor(train_data)
         self.mean_data = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
         self.std_data = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
-        self.train_data = torch.FloatTensor((train_data - self.mean_data) / self.std_data).to(self.device)
+        self.train_data = torch.FloatTensor((train_data - self.mean_data) / self.std_data).to(args.device)
 
 
         self.train_label = torch.FloatTensor(train_label)
-        self.train_label = torch.FloatTensor((train_label - self.mean_data) / self.std_data).to(self.device)
-        self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(self.device)
+        self.train_label = torch.FloatTensor((train_label - self.mean_data) / self.std_data).to(args.device)
+        self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(args.device)
 
         # validation data
-        val_data = (seq_data[:, tr_win:val_win-self.seq_win, :]-self.mean_data)/self.std_data
-        val_label = (seq_label[:, tr_win:val_win-self.seq_win, :]-self.mean_data)/self.std_data
-        self.valid_data =  torch.FloatTensor(val_data).to(self.device)
-        self.valid_label = torch.FloatTensor(val_label).to(self.device)
-        self.valid_times = (torch.ones(val_data.shape[:-1])/val_data.shape[1]).to(self.device)
+        val_data = (seq_data[:, tr_win:val_win-args.seq_win, :]-self.mean_data)/self.std_data
+        val_label = (seq_label[:, tr_win:val_win-args.seq_win, :]-self.mean_data)/self.std_data
+        self.valid_data =  torch.FloatTensor(val_data).to(args.device)
+        self.valid_label = torch.FloatTensor(val_label).to(args.device)
+        self.valid_times = (torch.ones(val_data.shape[:-1])/val_data.shape[1]).to(args.device)
 
         # validation data
         eval_data = (seq_data[:, val_win:, :]-self.mean_data)/self.std_data
         eval_label = (seq_label[:, val_win:, :]-self.mean_data)/self.std_data
-        self.eval_data =  torch.FloatTensor(eval_data).to(self.device)
-        self.eval_label = torch.FloatTensor(eval_label).to(self.device)
-        self.eval_times = (torch.ones(eval_data.shape[:-1])/eval_data.shape[1]).to(self.device)
-
-    """POD Model Reduction"""
-    def reduce(self):
-        args = self.args
-        print('Reducing ... \t Modes: {}'.format(self.modes))
-        if self.dataset == 'FIB':
-            self.spatial_modes, self.data, self.lv, self.ux = POD1(self.data, self.tstart, self.tstop, self.modes)
-        if self.dataset == 'VKS':
-            self.domain_len = self.shape[1]*self.shape[2]
-            self.domain_shape = self.shape[1:-1]
-            self.component_len = self.shape[-1]
-            self.spatial_modes, self.data, self.lv, self.ux, self.uy = POD2(self.data, self.tstart, self.tstop, self.modes)
-        elif self.dataset == 'EE':
-            self.spatial_modes, self.data, self.lv, self.ux, self.uy, self.uz = POD3(self.data, self.tstart, self.tstop, self.modes)
-        elif self.dataset == 'KPP': #flatten and use POD1
-            self.spatial_modes, self.data, self.lv, self.ux = PODKPP(self.data, self.tstart, self.tstop, self.modes)
+        self.eval_data =  torch.FloatTensor(eval_data).to(args.device)
+        self.eval_label = torch.FloatTensor(eval_label).to(args.device)
+        self.eval_times = (torch.ones(eval_data.shape[:-1])/eval_data.shape[1]).to(args.device)
 
 
 class PARAM_LOADER:

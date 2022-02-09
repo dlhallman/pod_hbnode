@@ -63,9 +63,10 @@ def mode_prediction(predictions,true,times,verts,args):
         plt.subplot(args.modes//2,2,i+1)
         plt.plot(times,true.T[i], 'k', label='True')
         plt.plot(times,node, 'r', dashes=[1,1], label='Prediction')
-        plt.vlines(verts,ymin=min(node)+5,ymax=max(node)+5)
+        min_,max_=np.min(true.T[i]),np.max(true.T[i])
+        plt.vlines(verts,ymin=min_+.2*min_,ymax=max_+.2*max_)
         plt.xlabel("Time")
-        plt.ylim(bottom=min(true.T[i])+5,top=max(true.T[i])+5)
+        plt.ylim(bottom=min_+.2*min_,top=max_+.2*max_)
         plt.ylabel("$\\alpha_{}$".format(i))
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., prop={'size': 10}, frameon=False)
     #OUTPUT

@@ -72,8 +72,6 @@ def plot_AdjGrad(fname,args, show=False):
     if args.verbose: plt.show()
     return 1
 
-
-
 """  STIFFNESS PLOT """
 def plot_stiff(fname,args, clip=1, show=False):
     with open(fname, 'r') as file:
