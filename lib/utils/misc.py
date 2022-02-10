@@ -3,6 +3,7 @@ import csv
 import numpy as np
 import os
 import pickle
+import torch
 
 # DIRECTORY UTILS
 def set_outdir(OUTPUT_DIR, args=None):
@@ -14,6 +15,16 @@ def set_outdir(OUTPUT_DIR, args=None):
         top_str = args.model+'_'+args.dataset+'_'
         with open(OUTPUT_DIR + '/pth/'+top_str+'.pth', 'wb') as f:
             pickle.dump({' Model Arguments' : args}, f)
+
+def set_seed(se):
+    """ set the seeds to have reproducible results"""
+    
+    torch.manual_seed(se)
+    torch.cuda.manual_seed_all(se)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(se)
+    os.environ['PYTHONHASHSEED'] = str(se)
 
 #Record Training Data
 class Recorder:

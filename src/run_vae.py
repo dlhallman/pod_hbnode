@@ -12,7 +12,7 @@ sys.path.append('./')
 from lib.datasets import VAE_DATASET
 from lib.decomp.pod import pod_mode_to_true
 from lib.models.vae import *
-from lib.utils.misc import set_outdir, Recorder
+from lib.utils.misc import set_outdir, set_seed, Recorder
 from lib.utils.vae_helper import *
 from lib.vis.animate import data_animation
 from lib.vis.modes import mode_prediction
@@ -33,7 +33,7 @@ data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
 data_parser.add_argument('--load_file', type=str,
                     default='./out/nonT_pred/pth/vks_100_200_pod_8.npz',
                     help='Directory of pod data from cwd: sci.')
-data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred',
+data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred/',
                     help='Directory of output from cwd: sci.')
 data_parser.add_argument('--tr_ind', type = int, default=80,
                     help='Time index for training data.')
@@ -43,7 +43,7 @@ data_parser.add_argument('--val_ind', type=int, default=100,
 model_parser = parser.add_argument_group('Model Parameters')
 model_parser.add_argument('--model', type=str, default='NODE',
                     help='Dataset types: [NODE , HBNODE].')
-model_parser.add_argument('--epochs', type=int, default=500,
+model_parser.add_argument('--epochs', type=int, default=2000,
                     help='Training epochs.')
 model_parser.add_argument('--latent_dim', type=int, default=6,
                     help = 'Size of latent dimension')
@@ -51,7 +51,7 @@ model_parser.add_argument('--layers_enc', type=int, default=4,
                 help='Encoder Layers.')
 model_parser.add_argument('--units_enc', type=int, default=10,
                     help='Encoder units.')
-model_parser.add_argument('--layers_node', type=list, default=[12],
+model_parser.add_argument('--layers_node', type=int, default=[12],
                 nargs='+', help='NODE Layers.')
 model_parser.add_argument('--units_dec', type=int, default=41,
                     help='Training iterations.')
@@ -76,8 +76,7 @@ if args.verbose:
 
 """INITIALIZE"""
 #SETTNGS
-np.random.seed(args.seed)
-torch.manual_seed(args.seed)
+set_seed(args.seed)
 #FORMAT OUTDIR
 set_outdir(args.out_dir, args)
 #LOAD DATA
@@ -110,7 +109,7 @@ meter_train = RunningAverageMeter()
 meter_valid = RunningAverageMeter()
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
                                                 factor=args.factor, patience=5, verbose=False, threshold=1e-5,
-                                                threshold_mode='rel', cooldown=0, min_lr=1e-7, eps=1e-08)
+                                                threshold_mode='rel', cooldown=5, min_lr=1e-7, eps=1e-08)
 criterion = torch.nn.MSELoss()
 lossTrain = []
 lossVal = []
@@ -227,7 +226,6 @@ args.modes = vae.data_args.modes
 args.model = str('vae_'+args.model).lower()
 normalized = (predictions*vae.std_data+vae.mean_data)
 times = np.arange(vae.data_args.tstart,vae.data_args.tstart+args.val_ind)
-print(normalized.shape)
 #DATA PLOTS
 verts = [vae.data_args.tstart+args.tr_ind]
 mode_prediction(normalized[-1,:,:4],vae.data[:times[-1]-1],times,verts,args)
