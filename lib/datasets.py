@@ -282,19 +282,19 @@ class SEQ_DATASET:
         self.data = self.pod_dataset.data
         self.data_args = self.pod_dataset.args
 
-        total_size = self.data.shape[0] - args.seq_win
+        total_size = self.data.shape[0] - args.seq_ind
         
         #SEQUENCE DATA
-        seq_data = np.vstack([[self.data[t:t + args.seq_win, :] for t in range(total_size)]]).swapaxes(0,1)
-        seq_label = np.vstack([[self.data[t+1:t+args.seq_win+1, :] for t in range(total_size)]]).swapaxes(0,1)
-        tr_win = args.tr_win
-        val_win = args.val_win
+        seq_data = np.vstack([[self.data[t:t + args.seq_ind, :] for t in range(total_size)]]).swapaxes(0,1)
+        seq_label = np.vstack([[self.data[t+1:t+args.seq_ind+1, :] for t in range(total_size)]]).swapaxes(0,1)
+        tr_ind = args.tr_ind
+        val_ind = args.val_ind
         self.seq_data = seq_data
         self.seq_label = seq_label
                 
         # training data
-        train_data = seq_data[:, :tr_win-args.seq_win, :]
-        train_label = seq_label[:, :tr_win-args.seq_win, :]
+        train_data = seq_data[:, :tr_ind-args.seq_ind, :]
+        train_label = seq_label[:, :tr_ind-args.seq_ind, :]
         self.train_data =  torch.FloatTensor(train_data)
         self.mean_data = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
         self.std_data = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
@@ -306,15 +306,15 @@ class SEQ_DATASET:
         self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(args.device)
 
         # validation data
-        val_data = (seq_data[:, tr_win:val_win-args.seq_win, :]-self.mean_data)/self.std_data
-        val_label = (seq_label[:, tr_win:val_win-args.seq_win, :]-self.mean_data)/self.std_data
+        val_data = (seq_data[:, tr_ind:val_ind-args.seq_ind, :]-self.mean_data)/self.std_data
+        val_label = (seq_label[:, tr_ind:val_ind-args.seq_ind, :]-self.mean_data)/self.std_data
         self.valid_data =  torch.FloatTensor(val_data).to(args.device)
         self.valid_label = torch.FloatTensor(val_label).to(args.device)
         self.valid_times = (torch.ones(val_data.shape[:-1])/val_data.shape[1]).to(args.device)
 
         # validation data
-        eval_data = (seq_data[:, val_win:, :]-self.mean_data)/self.std_data
-        eval_label = (seq_label[:, val_win:, :]-self.mean_data)/self.std_data
+        eval_data = (seq_data[:, val_ind:, :]-self.mean_data)/self.std_data
+        eval_label = (seq_label[:, val_ind:, :]-self.mean_data)/self.std_data
         self.eval_data =  torch.FloatTensor(eval_data).to(args.device)
         self.eval_label = torch.FloatTensor(eval_label).to(args.device)
         self.eval_times = (torch.ones(eval_data.shape[:-1])/eval_data.shape[1]).to(args.device)
@@ -339,14 +339,14 @@ class PARAM_DATASET:
         args.tstop = min(args.tstop, self.data.shape[0]+args.tstart-1)
         
         #SEQUENCE DATA
-        rev = args.tstop - (args.tstart + args.tr_win)
+        rev = args.tstop - (args.tstart + args.tr_ind)
         train_size = 1 # int(0.8 * self.params)
         self.train =self.data[:train_size]
         self.eval =self.data[train_size:2] #remvoe 2 and pervious trainsize increase
 
 
         #SEQUENCE DATA
-        train_data = self.train[:,:args.tr_win,:].swapaxes(0,1)
+        train_data = self.train[:,:args.tr_ind,:].swapaxes(0,1)
         train_label = self.train[:,rev:,:].swapaxes(0,1)
         self.mean = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
         self.std = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
@@ -356,7 +356,7 @@ class PARAM_DATASET:
         self.train_label = torch.FloatTensor((train_label - self.mean) / self.std)
         self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(args.device)
 
-        eval_data = self.eval[:,:args.tr_win, :].swapaxes(0,1)
+        eval_data = self.eval[:,:args.tr_ind, :].swapaxes(0,1)
         eval_label = self.eval[:,rev:, :].swapaxes(0,1)
         self.eval_data =  torch.FloatTensor(eval_data).to(args.device)
         self.eval_label = torch.FloatTensor(eval_label).to(args.device)

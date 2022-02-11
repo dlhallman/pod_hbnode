@@ -36,16 +36,16 @@ data_parser.add_argument('--load_file', type=str,
                     help='Directory of pod data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred',
                     help='Directory of output from cwd: sci.')
-data_parser.add_argument('--tr_win', type=int, default=80,
+data_parser.add_argument('--tr_ind', type=int, default=80,
                 help='Time index for validation data.' )
-data_parser.add_argument('--val_win', type=int, default=100,
+data_parser.add_argument('--val_ind', type=int, default=100,
                 help='Time index for validation data.' )
 model_params = parser.add_argument_group('Model Parameters')
 model_params.add_argument('--model', type=str, default='HBNODE',
                     help='Model choices - GHBNODE, HBNODE, NODE.')
 data_parser.add_argument('--batch_size', type=int, default=20,
                 help='Time index for validation data.' )
-data_parser.add_argument('--seq_win', type=int, default=10,
+data_parser.add_argument('--seq_ind', type=int, default=10,
                 help='Time index for validation data.' )
 data_parser.add_argument('--layers', type = int, default = 8,
                     help = 'Number of hidden layers. Node: Value becomes modes*layers.')
