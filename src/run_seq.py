@@ -26,7 +26,6 @@ from lib.vis.reconstruct import data_reconstruct
 """INPUT ARGUMETNS"""
 parser = argparse.ArgumentParser(prefix_chars='-+/',
     description='[NODE] NODE parameters.')
-#DATA PARAMS
 data_parser = parser.add_argument_group('Data Parameters')
 data_parser.add_argument('--dataset', type=str, default='VKS',
                     help='Dataset types: [VKS, EE].')
@@ -41,8 +40,6 @@ data_parser.add_argument('--tr_win', type=int, default=80,
                 help='Time index for validation data.' )
 data_parser.add_argument('--val_win', type=int, default=100,
                 help='Time index for validation data.' )
-
-#MODEL PARAMS
 model_params = parser.add_argument_group('Model Parameters')
 model_params.add_argument('--model', type=str, default='HBNODE',
                     help='Model choices - GHBNODE, HBNODE, NODE.')
@@ -54,19 +51,17 @@ data_parser.add_argument('--layers', type = int, default = 8,
                     help = 'Number of hidden layers. Node: Value becomes modes*layers.')
 model_params.add_argument('--corr', type=int, default=0,
                     help='Skip gate input into soft max function.')
-#TRAINING PARAMS
 train_params = parser.add_argument_group('Training Parameters')
-train_params.add_argument('--epochs', type=int, default=2000,
+train_params.add_argument('--epochs', type=int, default=500,
                     help='Training epochs.')
-train_params.add_argument('--lr', type=float, default=0.001,
+train_params.add_argument('--lr', type=float, default=0.01,
                     help = 'Initial learning rate.')
 train_params.add_argument('--factor', type=float, default=0.975,
                     help = 'Initial learning rate.')
-train_params.add_argument('--cooldown', type=int, default=5,
+train_params.add_argument('--cooldown', type=int, default=2,
                     help = 'Initial learning rate.')
 train_params.add_argument('--patience', type=int, default=5,
                     help = 'Initial learning rate.')
-#UNIQUE PARAMS
 uq_params = parser.add_argument_group('Unique Parameters')
 uq_params.add_argument('--device', type=str, default='cpu',
                 help='Set default torch hardware device.')
@@ -115,9 +110,10 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
                 factor=args.factor, patience=args.patience, verbose=args.verbose, threshold=1e-5,
                 threshold_mode='rel', cooldown=args.cooldown, min_lr=1e-7, eps=1e-08)
 
-print("Training ...")
 # TRAINING
-for epoch in trange(args.epochs):
+print('Training ... \t Iterations: {}'.format(args.epochs))
+epochs = trange(1,args.epochs+1)
+for epoch in epochs:
 
     rec['epoch'] = epoch
     batchsize = args.batch_size
@@ -135,6 +131,7 @@ for epoch in trange(args.epochs):
         loss = criteria(predict, seq.train_label[:, b_n:b_n + batchsize])
         loss_meter_t.update(loss.item())
         rec['loss'] = loss
+        epochs.set_description('loss:{:.3f}'.format(loss))
 
         #BACKPROP
         if gradrec is not None:
