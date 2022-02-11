@@ -262,7 +262,7 @@ class VAE_DATASET():
         valid_data = valid_data.reshape((1, valid_data.shape[0], valid_data.shape[1]))
         self.valid_data = torch.FloatTensor(valid_data)
 
-        self.data_eval = self.data[args.val_ind:, :]
+        self.data_eval = self.data[args.val_ind:args.eval_ind, :]
 
         #INVERT OVER TIME
         idx = [i for i in range(self.train_data.size(0) - 1, -1, -1)]
@@ -270,7 +270,7 @@ class VAE_DATASET():
         self.obs_t = self.train_data.index_select(0, idx)
 
         #NORMALIZE TIME
-        eval_times = np.linspace(0, 1, self.data.shape[0])
+        eval_times = np.linspace(0, 1, args.eval_ind)
         self.eval_times = torch.from_numpy(eval_times).float()
         self.train_times = self.eval_times[:args.tr_ind]
         self.valid_times = self.eval_times[:args.val_ind]
@@ -320,57 +320,47 @@ class SEQ_DATASET:
         self.eval_times = (torch.ones(eval_data.shape[:-1])/eval_data.shape[1]).to(args.device)
 
 
-class PARAM_LOADER:
+
+class PARAM_DATASET:
 
     def __init__(self, args):
         
         assert args.dataset == "EE"
-        #DATA CONFIG
-        self.dataset = args.dataset
-        self.data_dir = args.data_dir
-        self.modes = args.modes
-        self.tstart = args.tstart
-        self.tstop = args.tstop
-        #SPLIT CONFIG
-        self.batch_size = args.batch_size
-        self.tr_win = args.tr_win
-        self.device = args.device
 
-        print('Loading ... \t Dataset: {}'.format(self.dataset))
+        print('Loading ... \t Dataset: {}'.format(args.dataset))
         self.data_init = EE_PARAM(args.data_dir)
         self.data = self.data_init
         self.params = self.data_init.shape[-1]
         self.shape = self.data_init.shape
         self.time_len = self.shape[0]
 
-        if self.modes != None:
-            self.reduce()
+        self.reduce()
+
         args.tstop = min(args.tstop, self.data.shape[0]+args.tstart-1)
         
         #SEQUENCE DATA
-        rev = self.tstop - (self.tstart + self.tr_win)
+        rev = args.tstop - (args.tstart + args.tr_win)
         train_size = 1 # int(0.8 * self.params)
         self.train =self.data[:train_size]
         self.eval =self.data[train_size:2] #remvoe 2 and pervious trainsize increase
 
 
         #SEQUENCE DATA
-        train_data = self.train[:,:self.tr_win,:].swapaxes(0,1)
+        train_data = self.train[:,:args.tr_win,:].swapaxes(0,1)
         train_label = self.train[:,rev:,:].swapaxes(0,1)
         self.mean = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
         self.std = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
         self.train_data = torch.FloatTensor((train_data - self.mean) / self.std)
 
-        self.train_label = torch.FloatTensor(train_label).to(self.device)
+        self.train_label = torch.FloatTensor(train_label).to(args.device)
         self.train_label = torch.FloatTensor((train_label - self.mean) / self.std)
-        self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(self.device)
+        self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(args.device)
 
-        eval_data = self.eval[:,:self.tr_win, :].swapaxes(0,1)
+        eval_data = self.eval[:,:args.tr_win, :].swapaxes(0,1)
         eval_label = self.eval[:,rev:, :].swapaxes(0,1)
-        self.eval_data =  torch.FloatTensor(eval_data).to(self.device)
-        self.eval_label = torch.FloatTensor(eval_label).to(self.device)
-        self.eval_times = (torch.ones(eval_data.shape[:-1])/eval_data.shape[1]).to(self.device)
-
+        self.eval_data =  torch.FloatTensor(eval_data).to(args.device)
+        self.eval_label = torch.FloatTensor(eval_label).to(args.device)
+        self.eval_times = (torch.ones(eval_data.shape[:-1])/eval_data.shape[1]).to(args.device)
 
     def reduce(self):
         """POD Model Reduction"""

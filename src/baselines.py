@@ -16,7 +16,7 @@ from lib.utils.misc import set_outdir
 
 #SETTINGS
 warnings.filterwarnings('ignore')
-set_outdir('./out')
+set_outdir('./out/')
 
 """
 VKS EXAMPLE

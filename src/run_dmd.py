@@ -42,7 +42,7 @@ decomp_parser.add_argument('--tpred', type=int, default=400,
 decomp_parser.add_argument('--lifts', type=str, default='', nargs='+',
                     help='Prediction time.' )
 uq_params = parser.add_argument_group('Unique Parameters')
-uq_params.add_argument('--verbose', type=bool, default=False,
+uq_params.add_argument('--verbose', default=False, action='store_true',
                 help='To display output or not.')
 args, unknown = parser.parse_known_args()
 

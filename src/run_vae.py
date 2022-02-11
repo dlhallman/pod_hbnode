@@ -1,6 +1,6 @@
 #IMPORTS
 import argparse
-from torchdiffeq import odeint
+from torchdiffeq import odeint_adjoint as odeint
 import torch.optim as optim
 from tqdm import tqdm,trange
 import numpy as np
@@ -39,6 +39,8 @@ data_parser.add_argument('--tr_ind', type = int, default=80,
                     help='Time index for training data.')
 data_parser.add_argument('--val_ind', type=int, default=100,
                     help='Time index for validation data.' )
+data_parser.add_argument('--eval_ind', type=int, default=100,
+                    help='Time index for evaluation data.' )
 #MODEL PARAMS
 model_parser = parser.add_argument_group('Model Parameters')
 model_parser.add_argument('--model', type=str, default='NODE',
@@ -59,13 +61,13 @@ model_parser.add_argument('--layers_dec', type=int, default=4,
                 help='Encoder Layers.')
 model_parser.add_argument('--lr', type=float, default=0.00153,
                     help = 'Initial learning rate.')
-model_parser.add_argument('--factor', type=float, default=0.95,
+model_parser.add_argument('--factor', type=float, default=0.99,
                     help = 'Factor for reducing learning rate.')
 #UNIQUE PARAMS
 uq_params = parser.add_argument_group('Unique Parameters')
-uq_params.add_argument('--seed', type=int, default=0,
+uq_params.add_argument('--seed', type=int, default=1242,
                 help='Set initialization seed')
-uq_params.add_argument('--verbose', type=bool, default=False,
+uq_params.add_argument('--verbose', default=False, action='store_true',
                 help='Display full NN and all plots.')
 #PARSE
 args, unknown = parser.parse_known_args()
@@ -109,14 +111,16 @@ meter_train = RunningAverageMeter()
 meter_valid = RunningAverageMeter()
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
                                                 factor=args.factor, patience=5, verbose=False, threshold=1e-5,
-                                                threshold_mode='rel', cooldown=5, min_lr=1e-7, eps=1e-08)
+                                                threshold_mode='rel', cooldown=0, min_lr=1e-7, eps=1e-08)
 criterion = torch.nn.MSELoss()
 lossTrain = []
 lossVal = []
 
+
 #TRAINING
 print('Training ... \t Iterations: {}'.format(args.epochs))
-for epoch in trange(1, args.epochs + 1):
+epochs = trange(1,args.epochs+1)
+for epoch in epochs:
     rec['epoch'] = epoch
 
     optimizer.zero_grad()
@@ -132,7 +136,7 @@ for epoch in trange(1, args.epochs + 1):
     qz0_mean, qz0_logvar = out_enc[:, :latent_dim], out_enc[:, latent_dim:]
     epsilon = torch.randn(qz0_mean.size())
     z0 = epsilon * torch.exp(.5 * qz0_logvar) + qz0_mean
-    zt = odeint(node, z0, vae.train_times, method='rk4').permute(1, 0, 2)
+    zt = odeint(node, z0, vae.train_times).permute(1, 0, 2)
     output_vae_t = dec(zt)
 
     # LOSS
@@ -141,6 +145,7 @@ for epoch in trange(1, args.epochs + 1):
                             pz0_mean, pz0_logvar).sum(-1)
     kl_loss = torch.mean(analytic_kl, dim=0)
     loss = criterion(output_vae_t, vae.train_data) + kl_loss
+    epochs.set_description('loss:{:.3f}'.format(loss))
     rec['loss'] = loss
     rec['forward_nfe'] = node.nfe
 
@@ -161,7 +166,7 @@ for epoch in trange(1, args.epochs + 1):
         dec.eval()
 
         node.nfe = 0
-        zv = odeint(node, z0, vae.valid_times, method='rk4').permute(1, 0, 2)
+        zv = odeint(node, z0, vae.valid_times).permute(1, 0, 2)
         output_vae_v = dec(zv)
 
         loss_v = criterion(output_vae_v[:, args.tr_ind:],
@@ -199,7 +204,7 @@ with torch.no_grad():
     node.eval()
     dec.eval()
 
-    ze = odeint(node, z0, vae.eval_times, method='rk4').permute(1, 0, 2)
+    ze = odeint(node, z0, vae.eval_times).permute(1, 0, 2)
     output_vae_e = dec(ze)
 
     enc.train()
@@ -219,7 +224,7 @@ out_enc = enc.forward(obs_t)
 qz0_mean, qz0_logvar = out_enc[:, :latent_dim], out_enc[:, latent_dim:]
 epsilon = torch.randn(qz0_mean.size())
 z0 = epsilon * torch.exp(.5 * qz0_logvar) + qz0_mean
-zt = odeint(node, z0, vae.valid_times, method='rk4').permute(1, 0, 2)
+zt = odeint(node, z0, vae.valid_times).permute(1, 0, 2)
 predictions = dec(zt).detach().numpy()
 
 args.modes = vae.data_args.modes
@@ -235,4 +240,5 @@ data_animation(val_recon,args)
 
 #MODEL PLOTS
 plot_loss(rec_file, args)
-plot_nfe(rec_file, args)
+plot_nfe(rec_file,'forward_nfe', args)
+plot_nfe(rec_file,'backward_nfe', args)
