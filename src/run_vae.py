@@ -35,11 +35,11 @@ data_parser.add_argument('--load_file', type=str,
                     help='Directory of pod data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred/',
                     help='Directory of output from cwd: sci.')
-data_parser.add_argument('--tr_ind', type = int, default=80,
+data_parser.add_argument('--tr_ind', type = int, default=75,
                     help='Time index for training data.')
 data_parser.add_argument('--val_ind', type=int, default=100,
                     help='Time index for validation data.' )
-data_parser.add_argument('--eval_ind', type=int, default=100,
+data_parser.add_argument('--eval_ind', type=int, default=200,
                     help='Time index for evaluation data.' )
 #MODEL PARAMS
 model_parser = parser.add_argument_group('Model Parameters')
