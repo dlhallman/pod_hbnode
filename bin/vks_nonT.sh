@@ -40,15 +40,17 @@ $1 src/run_vae.py \
     --tr_ind 75 \
     --val_ind 100 \
     --eval_ind 200 \
+    --latent_dim 3 \
+    --layers_enc 6 \
     --model HBNODE
 
 
-#echo "COMPARISON PLOTS"
-#$1 src/compare.py \
-#   --file_list ./out/nonT_pred/pth/HBNODE.csv ./out/nonT_pred/pth/NODE.csv \
-#   --model_list vae_hbnode vae_node \
-#   --comparisons forward_nfe backward_nfe tr_loss val_loss \
-#   --epoch_freq 100
+echo "COMPARISON PLOTS"
+$1 src/compare.py \
+   --file_list ./out/nonT_pred/pth/HBNODE.csv ./out/nonT_pred/pth/NODE.csv \
+   --model_list vae_hbnode vae_node \
+   --comparisons forward_nfe backward_nfe tr_loss val_loss \
+   --epoch_freq 100
 
 
 echo "BASH TASK(S) COMPLETED."
