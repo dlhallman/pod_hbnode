@@ -59,6 +59,8 @@ def mode_prediction(predictions,true,times,verts,args):
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
     plt.figure(tight_layout=True)
+    if len(times)!=len(predictions):
+        times = np.arange(len(predictions))
     for i,node in enumerate(predictions.T):
         plt.subplot(args.modes//2,2,i+1)
         plt.plot(times,true.T[i], 'k', label='True')

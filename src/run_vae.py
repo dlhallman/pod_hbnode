@@ -31,7 +31,7 @@ data_parser.add_argument('--dataset', type=str, default='VKS',
 data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
                     help='Directory of data from cwd: sci.')
 data_parser.add_argument('--load_file', type=str,
-                    default='./out/nonT_pred/pth/vks_100_200_pod_8.npz',
+                    default='./out/nonT_pred/pth/vks_100_300_pod_8.npz',
                     help='Directory of pod data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred/',
                     help='Directory of output from cwd: sci.')
@@ -233,7 +233,7 @@ normalized = (predictions*vae.std_data+vae.mean_data)
 times = np.arange(vae.data_args.tstart,vae.data_args.tstart+args.val_ind)
 #DATA PLOTS
 verts = [vae.data_args.tstart+args.tr_ind]
-mode_prediction(normalized[-1,:,:4],vae.data[:times[-1]-1],times,verts,args)
+mode_prediction(normalized[-1,:,:4],vae.data[:args.val_ind],times,verts,args)
 val_recon = pod_mode_to_true(vae.pod_dataset,normalized,args)
 data_reconstruct(val_recon,args.val_ind-1,args)
 data_animation(val_recon,args)

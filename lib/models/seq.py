@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 from torch import device, nn
-from torchdiffeq import odeint_adjoint, odeint
+from torchdiffeq import odeint_adjoint as odeint
 
 from lib.utils.seq_helper import *
 

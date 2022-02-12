@@ -13,7 +13,7 @@ sys.path.append('./')
 from lib.datasets import SEQ_DATASET
 from lib.decomp.pod import pod_mode_to_true
 from lib.models.seq import *
-from lib.utils.misc import set_outdir, Recorder
+from lib.utils.misc import set_outdir,set_seed, Recorder
 from lib.utils.seq_helper import *
 from lib.vis.animate import data_animation
 from lib.vis.modes import mode_prediction
@@ -67,7 +67,7 @@ uq_params.add_argument('--device', type=str, default='cpu',
                 help='Set default torch hardware device.')
 uq_params.add_argument('--seed', type=int, default=0,
                 help='Set initialization seed')
-uq_params.add_argument('--verbose', type=bool, default=False,
+uq_params.add_argument('--verbose', default=False, action='store_true',
                 help='Number of display modes.')
 
 #PARSE
@@ -80,8 +80,7 @@ if args.verbose:
 
 """INITIALIZE"""
 #SETTNGS
-np.random.seed(args.seed)
-torch.manual_seed(args.seed)
+set_seed(args.seed)
 #FORMAT OUTDIR
 set_outdir(args.out_dir, args)
 #LOAD DATA
@@ -107,7 +106,7 @@ criteria = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-5)
 loss_meter_t = RunningAverageMeter()
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
-                factor=args.factor, patience=args.patience, verbose=args.verbose, threshold=1e-5,
+                factor=args.factor, patience=args.patience, verbose=False, threshold=1e-5,
                 threshold_mode='rel', cooldown=args.cooldown, min_lr=1e-7, eps=1e-08)
 
 # TRAINING
@@ -131,6 +130,8 @@ for epoch in epochs:
         loss = criteria(predict, seq.train_label[:, b_n:b_n + batchsize])
         loss_meter_t.update(loss.item())
         rec['loss'] = loss
+        rec['forward_nfe'] = model.cell.nfe
+        rec['forward_stiff'] = model.cell.stiff
         epochs.set_description('loss:{:.3f}'.format(loss))
 
         #BACKPROP
@@ -144,10 +145,10 @@ for epoch in epochs:
             model.zero_grad()
         model.cell.nfe = 0
         loss.backward()
+        optimizer.step()
         rec['backward_nfe'] = model.cell.nfe
         rec['backward_stiff'] = model.cell.stiff
         nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-        optimizer.step()
 
     rec['train_time'] = time.time() - train_start_time
 
@@ -179,13 +180,13 @@ for epoch in epochs:
 
 print("Generating Output ... ")
 args.modes = seq.data_args.modes
-args.model = str('seq'+args.model).lower()
+args.model = str('seq_'+args.model).lower()
 predictions = model(seq.valid_times, seq.valid_data).cpu().detach().numpy()
 normalized = (predictions*seq.std_data+seq.mean_data)
 times = np.arange(seq.data_args.tstart,seq.data_args.tstart+args.val_ind)
 #DATA PLOTS
 verts = [seq.data_args.tstart+args.tr_ind]
-mode_prediction(normalized[-1,:,:4],seq.data[:times[-1]-1],times,verts,args)
+mode_prediction(normalized[-1,:,:4],seq.data[:args.val_ind],times,verts,args)
 val_recon = pod_mode_to_true(seq.pod_dataset,normalized,args)
 data_reconstruct(val_recon,args.val_ind-1,args)
 data_animation(val_recon,args)
