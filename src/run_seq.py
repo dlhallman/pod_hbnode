@@ -47,7 +47,7 @@ data_parser.add_argument('--batch_size', type=int, default=20,
                 help='Time index for validation data.' )
 data_parser.add_argument('--seq_ind', type=int, default=10,
                 help='Time index for validation data.' )
-data_parser.add_argument('--layers', type = int, default = 8,
+data_parser.add_argument('--layers', type = int, default = 12,
                     help = 'Number of hidden layers. Node: Value becomes modes*layers.')
 model_params.add_argument('--corr', type=int, default=0,
                     help='Skip gate input into soft max function.')
@@ -56,9 +56,9 @@ train_params.add_argument('--epochs', type=int, default=500,
                     help='Training epochs.')
 train_params.add_argument('--lr', type=float, default=0.01,
                     help = 'Initial learning rate.')
-train_params.add_argument('--factor', type=float, default=0.975,
+train_params.add_argument('--factor', type=float, default=0.99,
                     help = 'Initial learning rate.')
-train_params.add_argument('--cooldown', type=int, default=2,
+train_params.add_argument('--cooldown', type=int, default=0,
                     help = 'Initial learning rate.')
 train_params.add_argument('--patience', type=int, default=5,
                     help = 'Initial learning rate.')
