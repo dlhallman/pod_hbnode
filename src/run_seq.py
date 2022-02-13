@@ -183,13 +183,14 @@ args.modes = seq.data_args.modes
 args.model = str('seq_'+args.model).lower()
 predictions = model(seq.valid_times, seq.valid_data).cpu().detach().numpy()
 normalized = (predictions*seq.std_data+seq.mean_data)
-times = np.arange(seq.data_args.tstart,seq.data_args.tstart+args.val_ind)
+times = np.arange(seq.data_args.tstart+args.tr_ind+args.seq_ind,seq.data_args.tstart+args.val_ind)
 #DATA PLOTS
 verts = [seq.data_args.tstart+args.tr_ind]
-mode_prediction(normalized[-1,:,:4],seq.data[:args.val_ind],times,verts,args)
+print(seq.data[:args.val_ind].shape)
+mode_prediction(normalized[-1,:,:4],seq.data[args.tr_ind+args.seq_ind:args.val_ind],times,verts,args)
 val_recon = pod_mode_to_true(seq.pod_dataset,normalized,args)
-data_reconstruct(val_recon,args.val_ind-1,args)
-data_animation(val_recon,args)
+data_reconstruct(val_recon,-1,args)
+#data_animation(val_recon,args)
 
 #MODEL PLOTS
 plot_loss(rec_file, args)
