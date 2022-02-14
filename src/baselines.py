@@ -22,430 +22,429 @@ set_outdir('./out/')
 VKS EXAMPLE
 
 """
-padding=15
+def run():
+  padding=15
 
-print('*'*40+'\nVKS BASELINE(S)')
-vks = VKS_DAT('./data/VKS.pkl')
-domain_shape=vks.shape[1:3]
-domain_len=vks.shape[1]*vks.shape[2]
-time_len=vks.shape[0]
+  print('*'*40+'\nVKS BASELINE(S)')
+  vks = VKS_DAT('./data/VKS.pkl')
+  domain_shape=vks.shape[1:3]
+  domain_len=vks.shape[1]*vks.shape[2]
+  time_len=vks.shape[0]
 
-print('init'+'.'*20+'animation',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family']='Times New Roman'
-fig, axes = plt.subplots(2,1,tight_layout=True)
-lines = []
-for ax in axes.flatten():
-    lines = lines + [ax.imshow(np.zeros((vks.shape[1:3])), origin='upper', vmin =-.4,vmax =.4, aspect='auto')]
+  print('init'+'.'*20+'animation',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family']='Times New Roman'
+  fig, axes = plt.subplots(2,1,tight_layout=True)
+  lines = []
+  for ax in axes.flatten():
+      lines = lines + [ax.imshow(np.zeros((vks.shape[1:3])), origin='upper', vmin =-.4,vmax =.4, aspect='auto')]
 
-def run_vks_lines(vks_t):
-    lines[0].set_data(vks[vks_t,:,:,0].T)
-    lines[1].set_data(vks[vks_t,:,:,1].T)
-    return lines
-ani = animation.FuncAnimation(fig, run_vks_lines, blit=False, interval=vks.shape[0]-1,
-    repeat=False)
-ani.save('./out/vks_init_data.gif', writer="PillowWriter", fps=6);
+  def run_vks_lines(vks_t):
+      lines[0].set_data(vks[vks_t,:,:,0].T)
+      lines[1].set_data(vks[vks_t,:,:,1].T)
+      return lines
+  ani = animation.FuncAnimation(fig, run_vks_lines, blit=False, interval=vks.shape[0]-1,
+      repeat=False)
+  ani.save('./out/vks_init_data.gif', writer="PillowWriter", fps=6);
 
-print('init'+'.'*20+'static',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['xtick.minor.size'] = 0
-plt.rcParams['ytick.minor.size'] = 0
-fig=plt.figure(tight_layout=True)
-ax = plt.subplot(211)
-ax.set_title('$u\'_x$',fontsize=36,pad=padding)
-ax.imshow(vks[150,:,:,0].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-ax = plt.subplot(212)
-ax.set_title('$u\'_y$',fontsize=36,pad=padding)
-ax.imshow(vks[150,:,:,1].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-plt.savefig('./out/vks_init_data.pdf', format="pdf", bbox_inches="tight")
-print('init'+'.'*20+'complete')
-
-
-print('mean subtracted'+'.'*20+'animation',end='\r')
-#GIF
-s_ind=0
-e_ind=time_len
-num_pod_modes=8
-spatial_modes, pod_modes, eigenvalues, vx_mnstrt, vy_mnstrt = POD2(vks, s_ind, e_ind, num_pod_modes)
-np.savez('./out/pth/vks_full_pod_8.npz',[None,spatial_modes,pod_modes,eigenvalues,vx_mnstrt,vy_mnstrt])
-fig, axes = plt.subplots(2,1, tight_layout=True)
-lines = []
-for ax in axes.flatten():
-    lines = lines + [ax.imshow(np.zeros(vks.shape[1:3]), origin='upper',vmin=-1, vmax=1, aspect='auto')]
-def vks_mnstrt_anim(vks_t):
-    lines[0].set_data(vx_mnstrt[vks_t,:,:].T)
-    lines[1].set_data(vy_mnstrt[vks_t,:,:].T)
-    return lines
-ani = animation.FuncAnimation(fig, vks_mnstrt_anim, blit=True, interval=vks.shape[0]-1,
-    repeat=False)
-ani.save('./out/vks_mnstrt_data.gif', writer="PillowWriter", fps=6);
-
-print('mean subtracted'+'.'*20+'static',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['xtick.minor.size'] = 0
-plt.rcParams['ytick.minor.size'] = 0
-fig=plt.figure(tight_layout=True)
-ax = plt.subplot(211)
-ax.set_title('$u\'_x$',fontsize=36,pad=padding)
-ax.imshow(vx_mnstrt[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-ax = plt.subplot(212)
-ax.set_title('$u\'_y$',fontsize=36,pad=padding)
-ax.imshow(vy_mnstrt[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-plt.savefig('./out/vks_mnstrt_data.pdf', format="pdf", bbox_inches="tight")
-print('mean subtracted'+'.'*20+'complete')
+  print('init'+'.'*20+'static',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family'] = 'Times New Roman'
+  plt.rcParams['xtick.minor.size'] = 0
+  plt.rcParams['ytick.minor.size'] = 0
+  fig=plt.figure(tight_layout=True)
+  ax = plt.subplot(211)
+  ax.set_title('$u\'_x$',fontsize=36,pad=padding)
+  ax.imshow(vks[150,:,:,0].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  ax = plt.subplot(212)
+  ax.set_title('$u\'_y$',fontsize=36,pad=padding)
+  ax.imshow(vks[150,:,:,1].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  plt.savefig('./out/vks_init_data.pdf', format="pdf", bbox_inches="tight")
+  print('init'+'.'*20+'complete')
 
 
-print('phases'+'.'*20+'transient',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['xtick.minor.size'] = 0
-plt.rcParams['ytick.minor.size'] = 0
-fig=plt.figure(tight_layout=True)
-ax = plt.subplot(211)
-ax.set_title('$u\'_x$',fontsize=36,pad=padding)
-ax.imshow(vx_mnstrt[50].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-ax = plt.subplot(212)
-ax.set_title('$u\'_y$',fontsize=36,pad=padding)
-ax.imshow(vy_mnstrt[50].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-plt.savefig('./out/vks_transient.pdf', format="pdf", bbox_inches="tight")
-print('phases'+'.'*20+'non-transient',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['xtick.minor.size'] = 0
-plt.rcParams['ytick.minor.size'] = 0
-fig=plt.figure(tight_layout=True)
-ax = plt.subplot(211)
-ax.set_title('$u\'_x$',fontsize=36,pad=padding)
-ax.imshow(vx_mnstrt[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-ax = plt.subplot(212)
-ax.set_title('$u\'_y$',fontsize=36,pad=padding)
-ax.imshow(vy_mnstrt[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-plt.savefig('./out/vks_quasi_periodic.pdf', format="pdf", bbox_inches="tight")
-print('phases'+'.'*20+'complete')
+  print('mean subtracted'+'.'*20+'animation',end='\r')
+  #GIF
+  s_ind=0
+  e_ind=time_len
+  num_pod_modes=8
+  spatial_modes, pod_modes, eigenvalues, vx_mnstrt, vy_mnstrt = POD2(vks, s_ind, e_ind, num_pod_modes)
+  np.savez('./out/pth/vks_full_pod_8.npz',[None,spatial_modes,pod_modes,eigenvalues,vx_mnstrt,vy_mnstrt])
+  fig, axes = plt.subplots(2,1, tight_layout=True)
+  lines = []
+  for ax in axes.flatten():
+      lines = lines + [ax.imshow(np.zeros(vks.shape[1:3]), origin='upper',vmin=-1, vmax=1, aspect='auto')]
+  def vks_mnstrt_anim(vks_t):
+      lines[0].set_data(vx_mnstrt[vks_t,:,:].T)
+      lines[1].set_data(vy_mnstrt[vks_t,:,:].T)
+      return lines
+  ani = animation.FuncAnimation(fig, vks_mnstrt_anim, blit=True, interval=vks.shape[0]-1,
+      repeat=False)
+  ani.save('./out/vks_mnstrt_data.gif', writer="PillowWriter", fps=6);
 
-print('pod full ({})'.format(num_pod_modes)+'.'*20+'animation',end='\r')
-vks_reconstructed = pod_modes@spatial_modes.T
-ux_reconstructed = vks_reconstructed[:,:domain_len].reshape(vks.shape[:-1])
-uy_reconstructed = vks_reconstructed[:,domain_len:].reshape(vks.shape[:-1])
-fig, axes = plt.subplots(2,1,tight_layout=True)
-lines = []
-for ax in axes.flatten():
-    lines = lines + [ax.imshow(np.zeros(domain_shape), origin='upper',vmin=-1, vmax=1, aspect='auto')]
-
-def vks_pod_recon_anim(vks_t):
-    lines[0].set_data(ux_reconstructed[vks_t,:,:].T)
-    lines[1].set_data(uy_reconstructed[vks_t,:,:].T)
-    return lines
-
-ani = animation.FuncAnimation(fig, vks_pod_recon_anim, blit=True, interval=vks.shape[0]-1,
-    repeat=False)
-ani.save('./out/vks_pod_recon_full.gif', writer="PillowWriter", fps=6);
-
-print('pod full ({})'.format(num_pod_modes)+'.'*20+'static',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['xtick.minor.size'] = 0
-plt.rcParams['ytick.minor.size'] = 0
-fig=plt.figure(tight_layout=True)
-ax = plt.subplot(211)
-ax.set_title('$u\'_x$',fontsize=48,pad=padding)
-ax.imshow(ux_reconstructed[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-ax = plt.subplot(212)
-ax.set_title('$u\'_y$',fontsize=48,pad=padding)
-ax.imshow(uy_reconstructed[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-plt.savefig('./out/vks_pod_recon_full.pdf', format="pdf", bbox_inches="tight")
-
-print('pod full ({})'.format(num_pod_modes)+'.'*20+'modes',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family']='Times New Roman'
-plt.rcParams['xtick.minor.size']=0
-plt.rcParams['ytick.minor.size']=0
-m=2
-n = num_pod_modes//m
-plt.figure(tight_layout=True)
-for i in range(4):
-    plt.subplot(2,2,i+1)
-    plt.plot(pod_modes[:,i], 'k')
-    plt.xlabel("Time $(t)$",fontsize=36)
-    plt.ylabel('$\\alpha_{}(t)$'.format(i+1),fontsize=36)
-plt.savefig('./out/vks_pod_modes_full.pdf', format="pdf", bbox_inches="tight")
-print('pod full ({})'.format(num_pod_modes)+'.'*20+'complete')
-
-print('pod full decay'.format(num_pod_modes)+'.'*20+'static',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family']='Times New Roman'
-plt.rcParams['xtick.minor.size']=0
-plt.rcParams['ytick.minor.size']=0
-s_ind=0
-e_ind=time_len
-full_pod_modes=time_len
-spatial_modes, pod_modes, eigenvalues, vx_mnstrt, vy_mnstrt = POD2(vks, s_ind, e_ind, full_pod_modes)
-total = sum(eigenvalues)
-cumulative=[1]
-
-for eig in eigenvalues:
-    val = eig/total
-    cumulative = cumulative + [cumulative[-1]-val]
-
-x2 = np.arange(0,len(cumulative))
-
-plt.figure(tight_layout=True)
-plt.plot(x2,cumulative, 'k')
-plt.xlabel('Number of Modes $(N)$',fontsize=36)
-plt.ylabel('$1-I(N)$',fontsize=36)
-plt.yscale('log')
-plt.yticks(np.logspace(-10,0,11))
-plt.ylim(1e-10,1)
-plt.savefig('./out/vks_pod_decay_full.pdf', format="pdf", bbox_inches="tight") 
-print("Relative information value is {:.5f} for {} modes.".format(1-cumulative[num_pod_modes],num_pod_modes))
-print('pod full decay'+'.'*20+'complete')
-
-"""NON-TRANSIENT"""
-s_ind=100
-e_ind=time_len
-num_pod_modes=8
-spatial_modes, pod_modes, eigenvalues, vx_mnstrt, vy_mnstrt = POD2(vks, s_ind, e_ind, num_pod_modes)
-np.savez('./out/pth/vks_nonT_pod_8.npz',[None,spatial_modes,pod_modes,eigenvalues,vx_mnstrt,vy_mnstrt])
-shape = [time_len-s_ind]+list(vks.shape[1:-1])
-print('pod non-transient ({})'.format(num_pod_modes)+'.'*20+'animation',end='\r')
-vks_reconstructed = pod_modes@spatial_modes.T
-ux_reconstructed = vks_reconstructed[:,:domain_len].reshape(shape)
-uy_reconstructed = vks_reconstructed[:,domain_len:].reshape(shape)
-fig, axes = plt.subplots(2,1,tight_layout=True)
-lines = []
-for ax in axes.flatten():
-    lines = lines + [ax.imshow(np.zeros(domain_shape), origin='upper',vmin=-1, vmax=1, aspect='auto')]
-
-def vks_pod_recon_anim(vks_t):
-    lines[0].set_data(ux_reconstructed[vks_t,:,:].T)
-    lines[1].set_data(uy_reconstructed[vks_t,:,:].T)
-    return lines
-
-ani = animation.FuncAnimation(fig, vks_pod_recon_anim, blit=True, interval=shape[0]-1,
-    repeat=False)
-ani.save('./out/vks_pod_recon_nonT.gif', writer="PillowWriter", fps=6);
-
-print('pod non-transient ({})'.format(num_pod_modes)+'.'*20+'static',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['xtick.minor.size'] = 0
-plt.rcParams['ytick.minor.size'] = 0
-fig=plt.figure(tight_layout=True)
-ax = plt.subplot(211)
-ax.set_title('$u\'_x$',fontsize=48,pad=padding)
-ax.imshow(ux_reconstructed[50].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-ax = plt.subplot(212)
-ax.set_title('$u\'_y$',fontsize=48,pad=padding)
-ax.imshow(uy_reconstructed[50].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-plt.savefig('./out/vks_pod_recon_nonT.pdf', format="pdf", bbox_inches="tight")
-
-print('pod non-transient ({})'.format(num_pod_modes)+'.'*20+'modes',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family']='Times New Roman'
-plt.rcParams['xtick.minor.size']=0
-plt.rcParams['ytick.minor.size']=0
-m=2
-n = num_pod_modes//m
-plt.figure(tight_layout=True)
-for i in range(4):
-    plt.subplot(2,2,i+1)
-    plt.plot(pod_modes[:,i], 'k')
-    plt.xlabel("Time $(t)$",fontsize=36)
-    plt.ylabel('$\\alpha_{}(t)$'.format(i+1),fontsize=36)
-plt.savefig('./out/vks_pod_modes_nonT.pdf', format="pdf", bbox_inches="tight")
-print('pod non-transient ({})'.format(num_pod_modes)+'.'*20+'complete')
-
-print('pod non-transient decay'+'.'*20+'static',end='\r')
-plt.style.use('classic')
-plt.rcParams['font.family']='Times New Roman'
-plt.rcParams['xtick.minor.size']=0
-plt.rcParams['ytick.minor.size']=0
-s_ind=100
-e_ind=time_len
-full_pod_modes=time_len-s_ind
-spatial_modes, pod_modes, eigenvalues, vx_mnstrt, vy_mnstrt = POD2(vks, s_ind, e_ind, full_pod_modes)
-total = sum(eigenvalues)
-cumulative=[1]
-
-for eig in eigenvalues:
-    val = eig/total
-    cumulative = cumulative + [cumulative[-1]-val]
-
-x2 = np.arange(0,len(cumulative))
-#CUMULATIVE PLOT
-plt.figure(tight_layout=True)
-plt.plot(x2,cumulative, 'k')
-plt.xlabel('Number of Modes $(N)$',fontsize=36)
-plt.ylabel('$1-I(N)$',fontsize=36)
-plt.yscale('log')
-plt.yticks(np.logspace(-10,0,11))
-plt.ylim(1e-10,1)
-plt.savefig('./out/vks_pod_decay_nonT.pdf', format="pdf", bbox_inches="tight") 
-print("Relative information value is {:.5f} for {} modes.".format(1-cumulative[num_pod_modes],num_pod_modes))
-print('pod non-transient decay'+'.'*20+'complete')
-
-"""DMD Decomposition Transient"""
-s_ind = 0
-e_ind = 398
-pred = vks.shape[0]
-num_dmd_modes=24
-print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'modes',end='\r')
-lifts=('cos','sin','quad','cube')
-X, Atilde,Ur,Phi,Lambda,Sigma,b = DMD2(vks, s_ind, e_ind, num_dmd_modes, lifts=lifts)
-dmd_modes = Phi.reshape([2]+list(vks.shape[1:-1])+[len(lifts)+1]+[num_dmd_modes])
-np.savez('./out/pth/vks_full_dmd_24.npz',[None,dmd_modes,X,Atilde,Ur,Phi,Lambda,Sigma,b,lifts])
-m=2
-n = num_dmd_modes//m
-plt.figure(tight_layout=True)
-for i in range(num_dmd_modes):
-    plt.subplot(num_dmd_modes,4,4*i+1)
-    plt.imshow(np.real(dmd_modes[0,:,:,0,i].T),aspect='auto')
-    plt.subplot(num_dmd_modes,4,4*i+2)
-    plt.imshow(np.imag(dmd_modes[0,:,:,0,i].T),aspect='auto')
-    plt.subplot(num_dmd_modes,4,4*i+3)
-    plt.imshow(np.real(dmd_modes[1,:,:,0,i].T),aspect='auto')
-    plt.subplot(num_dmd_modes,4,4*i+4)
-    plt.imshow(np.imag(dmd_modes[1,:,:,0,i].T),aspect='auto')
-plt.savefig('./out/vks_dmd_modes_full.pdf', format="pdf", bbox_inches="tight")
-print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'animation',end='\r')
-fig, axes = plt.subplots(2,1,tight_layout=True)
-lines = []
-for ax in axes.flatten():
-    lines = lines + [ax.imshow(np.zeros(domain_shape),
-                origin='upper', vmin=-.4, vmax=.4, aspect='auto')]
-
-def run(vks_t):
-    Lambda_k = np.linalg.matrix_power(Lambda,vks_t)
-    Xk=Phi@Lambda_k@b
-    var1_xk = np.real(Xk[:domain_len].reshape(domain_shape))
-    var2_xk = np.real(Xk[domain_len:2*domain_len].reshape(domain_shape))
-    lines[0].set_data(var1_xk.T)
-    lines[1].set_data(var2_xk.T)
-    return lines
-
-ani = animation.FuncAnimation(fig, run, blit=True, interval=pred,
-    repeat=False)
-ani.save('./out/vks_dmd_recon_full.gif', writer="PillowWriter", fps=6)
-
-print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'static',end='\r')
-Lambda_k = np.linalg.matrix_power(Lambda,150)
-Xk=Phi@Lambda_k@b
-var1_xk = np.real(Xk[:domain_len].reshape(domain_shape))
-var2_xk = np.real(Xk[domain_len:2*domain_len].reshape(domain_shape))
-fig=plt.figure(tight_layout=True)
-ax = plt.subplot(211)
-ax.set_title('$u\'_x$',fontsize=36,pad=padding)
-ax.imshow(var1_xk.T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-ax = plt.subplot(212)
-ax.set_title('$u\'_y$',fontsize=36,pad=padding)
-ax.imshow(var2_xk.T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-plt.savefig('./out/vks_dmd_recon_full.pdf', writer="PillowWriter", fps=6)
-
-print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'decay',end='\r')
-total = sum(Sigma)
-cumulative=[1]
-
-for eig in Sigma:
-    val = eig/total
-    cumulative = cumulative + [cumulative[-1]-val]
-
-x2 = np.arange(0,len(cumulative))
-#CUMULATIVE PLOT
-plt.figure(tight_layout=True)
-plt.plot(x2,cumulative, 'k')
-plt.xlabel('Number of Modes $(N)$',fontsize=36)
-plt.ylabel('$1-I(N)$',fontsize=36)
-plt.yscale('log')
-plt.yticks(np.logspace(-10,0,11))
-plt.ylim(1e-10,1)
-plt.savefig('./out/vks_dmd_decay_full.pdf', format="pdf", bbox_inches="tight") 
-print("Relative information value is {:.5f} for {} modes.".format(1-cumulative[num_dmd_modes],num_dmd_modes))
-print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'complete')
+  print('mean subtracted'+'.'*20+'static',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family'] = 'Times New Roman'
+  plt.rcParams['xtick.minor.size'] = 0
+  plt.rcParams['ytick.minor.size'] = 0
+  fig=plt.figure(tight_layout=True)
+  ax = plt.subplot(211)
+  ax.set_title('$u\'_x$',fontsize=36,pad=padding)
+  ax.imshow(vx_mnstrt[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  ax = plt.subplot(212)
+  ax.set_title('$u\'_y$',fontsize=36,pad=padding)
+  ax.imshow(vy_mnstrt[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  plt.savefig('./out/vks_mnstrt_data.pdf', format="pdf", bbox_inches="tight")
+  print('mean subtracted'+'.'*20+'complete')
 
 
-"""DMD Decomposition Non-Transient"""
-s_ind = 100
-e_ind = 398
-pred = vks.shape[0]
-num_dmd_modes=24
-lifts=('cos','sin','quad','cube')
-X, Atilde,Ur,Phi,Lambda,Sigma,b = DMD2(vks, s_ind, e_ind, num_dmd_modes, lifts=lifts)
-dmd_modes = Phi.reshape([2]+[len(lifts)+1]+list(vks.shape[1:-1])+[num_dmd_modes])
-np.savez('./out/pth/vks_nonT_dmd_24.npz',[None,dmd_modes,X,Atilde,Ur,Phi,Lambda,Sigma,b,lifts])
-m=2
-n = num_dmd_modes//m
-print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'modes',end='\r')
-plt.figure(tight_layout=True)
-for i in range(num_dmd_modes):
-    plt.subplot(num_dmd_modes,4,4*i+1)
-    plt.imshow(np.real(dmd_modes[0,0,:,:,i].T),aspect='auto')
-    plt.subplot(num_dmd_modes,4,4*i+2)
-    plt.imshow(np.imag(dmd_modes[0,0,:,:,i].T),aspect='auto')
-    plt.subplot(num_dmd_modes,4,4*i+3)
-    plt.imshow(np.real(dmd_modes[1,0,:,:,i].T),aspect='auto')
-    plt.subplot(num_dmd_modes,4,4*i+4)
-    plt.imshow(np.imag(dmd_modes[1,0,:,:,i].T),aspect='auto')
-plt.savefig('./out/vks_dmd_modes_nonT.pdf', format="pdf", bbox_inches="tight")
-print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'animation',end='\r')
-fig, axes = plt.subplots(2,1,tight_layout=True)
-lines = []
-for ax in axes.flatten():
-    lines = lines + [ax.imshow(np.zeros(domain_shape),
-                origin='upper', vmin=-.4, vmax=.4, aspect='auto')]
+  print('phases'+'.'*20+'transient',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family'] = 'Times New Roman'
+  plt.rcParams['xtick.minor.size'] = 0
+  plt.rcParams['ytick.minor.size'] = 0
+  fig=plt.figure(tight_layout=True)
+  ax = plt.subplot(211)
+  ax.set_title('$u\'_x$',fontsize=36,pad=padding)
+  ax.imshow(vx_mnstrt[50].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  ax = plt.subplot(212)
+  ax.set_title('$u\'_y$',fontsize=36,pad=padding)
+  ax.imshow(vy_mnstrt[50].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  plt.savefig('./out/vks_transient.pdf', format="pdf", bbox_inches="tight")
+  print('phases'+'.'*20+'non-transient',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family'] = 'Times New Roman'
+  plt.rcParams['xtick.minor.size'] = 0
+  plt.rcParams['ytick.minor.size'] = 0
+  fig=plt.figure(tight_layout=True)
+  ax = plt.subplot(211)
+  ax.set_title('$u\'_x$',fontsize=36,pad=padding)
+  ax.imshow(vx_mnstrt[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  ax = plt.subplot(212)
+  ax.set_title('$u\'_y$',fontsize=36,pad=padding)
+  ax.imshow(vy_mnstrt[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  plt.savefig('./out/vks_quasi_periodic.pdf', format="pdf", bbox_inches="tight")
+  print('phases'+'.'*20+'complete')
 
-def run(vks_t):
-    Lambda_k = np.linalg.matrix_power(Lambda,vks_t)
-    Xk=Phi@Lambda_k@b
-    var1_xk = np.real(Xk[:domain_len].reshape(domain_shape))
-    var2_xk = np.real(Xk[domain_len:2*domain_len].reshape(domain_shape))
-    lines[0].set_data(var1_xk.T)
-    lines[1].set_data(var2_xk.T)
-    return lines
+  print('pod full ({})'.format(num_pod_modes)+'.'*20+'animation',end='\r')
+  vks_reconstructed = pod_modes@spatial_modes.T
+  ux_reconstructed = vks_reconstructed[:,:domain_len].reshape(vks.shape[:-1])
+  uy_reconstructed = vks_reconstructed[:,domain_len:].reshape(vks.shape[:-1])
+  fig, axes = plt.subplots(2,1,tight_layout=True)
+  lines = []
+  for ax in axes.flatten():
+      lines = lines + [ax.imshow(np.zeros(domain_shape), origin='upper',vmin=-1, vmax=1, aspect='auto')]
 
-ani = animation.FuncAnimation(fig, run, blit=True, interval=pred,
-    repeat=False)
-ani.save('./out/vks_dmd_recon_nonT.gif', writer="PillowWriter", fps=6);
+  def vks_pod_recon_anim(vks_t):
+      lines[0].set_data(ux_reconstructed[vks_t,:,:].T)
+      lines[1].set_data(uy_reconstructed[vks_t,:,:].T)
+      return lines
 
-print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'static',end='\r')
-Lambda_k = np.linalg.matrix_power(Lambda,150)
-Xk=Phi@Lambda_k@b
-var1_xk = np.real(Xk[:domain_len].reshape(domain_shape))
-var2_xk = np.real(Xk[domain_len:2*domain_len].reshape(domain_shape))
-fig=plt.figure(tight_layout=True)
-ax = plt.subplot(211)
-ax.set_title('$u\'_x$',fontsize=36,pad=padding)
-ax.imshow(var1_xk.T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-ax = plt.subplot(212)
-ax.set_title('$u\'_y$',fontsize=36,pad=padding)
-ax.imshow(var2_xk.T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
-plt.savefig('./out/vks_dmd_recon_nonT.pdf', writer="PillowWriter", fps=6)
+  ani = animation.FuncAnimation(fig, vks_pod_recon_anim, blit=True, interval=vks.shape[0]-1,
+      repeat=False)
+  ani.save('./out/vks_pod_recon_full.gif', writer="PillowWriter", fps=6);
 
-print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'decay',end='\r')
+  print('pod full ({})'.format(num_pod_modes)+'.'*20+'static',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family'] = 'Times New Roman'
+  plt.rcParams['xtick.minor.size'] = 0
+  plt.rcParams['ytick.minor.size'] = 0
+  fig=plt.figure(tight_layout=True)
+  ax = plt.subplot(211)
+  ax.set_title('$u\'_x$',fontsize=48,pad=padding)
+  ax.imshow(ux_reconstructed[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  ax = plt.subplot(212)
+  ax.set_title('$u\'_y$',fontsize=48,pad=padding)
+  ax.imshow(uy_reconstructed[150].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  plt.savefig('./out/vks_pod_recon_full.pdf', format="pdf", bbox_inches="tight")
 
-total = sum(Sigma)
-cumulative=[1]
+  print('pod full ({})'.format(num_pod_modes)+'.'*20+'modes',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family']='Times New Roman'
+  plt.rcParams['xtick.minor.size']=0
+  plt.rcParams['ytick.minor.size']=0
+  m=2
+  n = num_pod_modes//m
+  plt.figure(tight_layout=True)
+  for i in range(4):
+      plt.subplot(2,2,i+1)
+      plt.plot(pod_modes[:,i], 'k')
+      plt.xlabel("Time $(t)$",fontsize=36)
+      plt.ylabel('$\\alpha_{}(t)$'.format(i+1),fontsize=36)
+  plt.savefig('./out/vks_pod_modes_full.pdf', format="pdf", bbox_inches="tight")
+  print('pod full ({})'.format(num_pod_modes)+'.'*20+'complete')
 
-for eig in Sigma:
-    val = eig/total
-    cumulative = cumulative + [cumulative[-1]-val]
+  print('pod full decay'.format(num_pod_modes)+'.'*20+'static',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family']='Times New Roman'
+  plt.rcParams['xtick.minor.size']=0
+  plt.rcParams['ytick.minor.size']=0
+  s_ind=0
+  e_ind=time_len
+  full_pod_modes=time_len
+  spatial_modes, pod_modes, eigenvalues, vx_mnstrt, vy_mnstrt = POD2(vks, s_ind, e_ind, full_pod_modes)
+  total = sum(eigenvalues)
+  cumulative=[1]
 
-x2 = np.arange(0,len(cumulative))
-#CUMULATIVE PLOT
-plt.figure(tight_layout=True)
-plt.plot(x2,cumulative, 'k')
-plt.xlabel('Number of Modes $(N)$',fontsize=36)
-plt.ylabel('$1-I(N)$',fontsize=36)
-plt.yscale('log')
-plt.yticks(np.logspace(-10,0,11))
-plt.ylim(1e-10,1)
-plt.savefig('./out/vks_dmd_decay_nonT.pdf', format="pdf", bbox_inches="tight") 
-print("Relative information value is {:.5f} for {} modes.".format(1-cumulative[num_dmd_modes],num_dmd_modes))
-print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'complete')
+  for eig in eigenvalues:
+      val = eig/total
+      cumulative = cumulative + [cumulative[-1]-val]
+
+  x2 = np.arange(0,len(cumulative))
+
+  plt.figure(tight_layout=True)
+  plt.plot(x2,cumulative, 'k')
+  plt.xlabel('Number of Modes $(N)$',fontsize=36)
+  plt.ylabel('$1-I(N)$',fontsize=36)
+  plt.yscale('log')
+  plt.yticks(np.logspace(-10,0,11))
+  plt.ylim(1e-10,1)
+  plt.savefig('./out/vks_pod_decay_full.pdf', format="pdf", bbox_inches="tight") 
+  print("Relative information value is {:.5f} for {} modes.".format(1-cumulative[num_pod_modes],num_pod_modes))
+  print('pod full decay'+'.'*20+'complete')
+
+  """NON-TRANSIENT"""
+  s_ind=100
+  e_ind=time_len
+  num_pod_modes=8
+  spatial_modes, pod_modes, eigenvalues, vx_mnstrt, vy_mnstrt = POD2(vks, s_ind, e_ind, num_pod_modes)
+  np.savez('./out/pth/vks_nonT_pod_8.npz',[None,spatial_modes,pod_modes,eigenvalues,vx_mnstrt,vy_mnstrt])
+  shape = [time_len-s_ind]+list(vks.shape[1:-1])
+  print('pod non-transient ({})'.format(num_pod_modes)+'.'*20+'animation',end='\r')
+  vks_reconstructed = pod_modes@spatial_modes.T
+  ux_reconstructed = vks_reconstructed[:,:domain_len].reshape(shape)
+  uy_reconstructed = vks_reconstructed[:,domain_len:].reshape(shape)
+  fig, axes = plt.subplots(2,1,tight_layout=True)
+  lines = []
+  for ax in axes.flatten():
+      lines = lines + [ax.imshow(np.zeros(domain_shape), origin='upper',vmin=-1, vmax=1, aspect='auto')]
+
+  def vks_pod_recon_anim(vks_t):
+      lines[0].set_data(ux_reconstructed[vks_t,:,:].T)
+      lines[1].set_data(uy_reconstructed[vks_t,:,:].T)
+      return lines
+
+  ani = animation.FuncAnimation(fig, vks_pod_recon_anim, blit=True, interval=shape[0]-1,
+      repeat=False)
+  ani.save('./out/vks_pod_recon_nonT.gif', writer="PillowWriter", fps=6);
+
+  print('pod non-transient ({})'.format(num_pod_modes)+'.'*20+'static',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family'] = 'Times New Roman'
+  plt.rcParams['xtick.minor.size'] = 0
+  plt.rcParams['ytick.minor.size'] = 0
+  fig=plt.figure(tight_layout=True)
+  ax = plt.subplot(211)
+  ax.set_title('$u\'_x$',fontsize=48,pad=padding)
+  ax.imshow(ux_reconstructed[50].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  ax = plt.subplot(212)
+  ax.set_title('$u\'_y$',fontsize=48,pad=padding)
+  ax.imshow(uy_reconstructed[50].T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  plt.savefig('./out/vks_pod_recon_nonT.pdf', format="pdf", bbox_inches="tight")
+
+  print('pod non-transient ({})'.format(num_pod_modes)+'.'*20+'modes',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family']='Times New Roman'
+  plt.rcParams['xtick.minor.size']=0
+  plt.rcParams['ytick.minor.size']=0
+  m=2
+  n = num_pod_modes//m
+  plt.figure(tight_layout=True)
+  for i in range(4):
+      plt.subplot(2,2,i+1)
+      plt.plot(pod_modes[:,i], 'k')
+      plt.xlabel("Time $(t)$",fontsize=36)
+      plt.ylabel('$\\alpha_{}(t)$'.format(i+1),fontsize=36)
+  plt.savefig('./out/vks_pod_modes_nonT.pdf', format="pdf", bbox_inches="tight")
+  print('pod non-transient ({})'.format(num_pod_modes)+'.'*20+'complete')
+
+  print('pod non-transient decay'+'.'*20+'static',end='\r')
+  plt.style.use('classic')
+  plt.rcParams['font.family']='Times New Roman'
+  plt.rcParams['xtick.minor.size']=0
+  plt.rcParams['ytick.minor.size']=0
+  s_ind=100
+  e_ind=time_len
+  full_pod_modes=time_len-s_ind
+  spatial_modes, pod_modes, eigenvalues, vx_mnstrt, vy_mnstrt = POD2(vks, s_ind, e_ind, full_pod_modes)
+  total = sum(eigenvalues)
+  cumulative=[1]
+
+  for eig in eigenvalues:
+      val = eig/total
+      cumulative = cumulative + [cumulative[-1]-val]
+
+  x2 = np.arange(0,len(cumulative))
+  #CUMULATIVE PLOT
+  plt.figure(tight_layout=True)
+  plt.plot(x2,cumulative, 'k')
+  plt.xlabel('Number of Modes $(N)$',fontsize=36)
+  plt.ylabel('$1-I(N)$',fontsize=36)
+  plt.yscale('log')
+  plt.yticks(np.logspace(-10,0,11))
+  plt.ylim(1e-10,1)
+  plt.savefig('./out/vks_pod_decay_nonT.pdf', format="pdf", bbox_inches="tight") 
+  print("Relative information value is {:.5f} for {} modes.".format(1-cumulative[num_pod_modes],num_pod_modes))
+  print('pod non-transient decay'+'.'*20+'complete')
+
+  """DMD Decomposition Transient"""
+  s_ind = 0
+  e_ind = 398
+  pred = vks.shape[0]
+  num_dmd_modes=24
+  print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'modes',end='\r')
+  lifts=('cos','sin','quad','cube')
+  X, Atilde,Ur,Phi,Lambda,Sigma,b = DMD2(vks, s_ind, e_ind, num_dmd_modes, lifts=lifts)
+  dmd_modes = Phi.reshape([2]+list(vks.shape[1:-1])+[len(lifts)+1]+[num_dmd_modes])
+  np.savez('./out/pth/vks_full_dmd_24.npz',[None,dmd_modes,X,Atilde,Ur,Phi,Lambda,Sigma,b,lifts])
+  m=2
+  n = num_dmd_modes//m
+  plt.figure(tight_layout=True)
+  for i in range(num_dmd_modes):
+      plt.subplot(num_dmd_modes,4,4*i+1)
+      plt.imshow(np.real(dmd_modes[0,:,:,0,i].T),aspect='auto')
+      plt.subplot(num_dmd_modes,4,4*i+2)
+      plt.imshow(np.imag(dmd_modes[0,:,:,0,i].T),aspect='auto')
+      plt.subplot(num_dmd_modes,4,4*i+3)
+      plt.imshow(np.real(dmd_modes[1,:,:,0,i].T),aspect='auto')
+      plt.subplot(num_dmd_modes,4,4*i+4)
+      plt.imshow(np.imag(dmd_modes[1,:,:,0,i].T),aspect='auto')
+  plt.savefig('./out/vks_dmd_modes_full.pdf', format="pdf", bbox_inches="tight")
+  print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'animation',end='\r')
+  fig, axes = plt.subplots(2,1,tight_layout=True)
+  lines = []
+  for ax in axes.flatten():
+      lines = lines + [ax.imshow(np.zeros(domain_shape),
+                  origin='upper', vmin=-.4, vmax=.4, aspect='auto')]
+
+  def run(vks_t):
+      Lambda_k = np.linalg.matrix_power(Lambda,vks_t)
+      Xk=Phi@Lambda_k@b
+      var1_xk = np.real(Xk[:domain_len].reshape(domain_shape))
+      var2_xk = np.real(Xk[domain_len:2*domain_len].reshape(domain_shape))
+      lines[0].set_data(var1_xk.T)
+      lines[1].set_data(var2_xk.T)
+      return lines
+
+  ani = animation.FuncAnimation(fig, run, blit=True, interval=pred,
+      repeat=False)
+  ani.save('./out/vks_dmd_recon_full.gif', writer="PillowWriter", fps=6)
+
+  print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'static',end='\r')
+  Lambda_k = np.linalg.matrix_power(Lambda,150)
+  Xk=Phi@Lambda_k@b
+  var1_xk = np.real(Xk[:domain_len].reshape(domain_shape))
+  var2_xk = np.real(Xk[domain_len:2*domain_len].reshape(domain_shape))
+  fig=plt.figure(tight_layout=True)
+  ax = plt.subplot(211)
+  ax.set_title('$u\'_x$',fontsize=36,pad=padding)
+  ax.imshow(var1_xk.T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  ax = plt.subplot(212)
+  ax.set_title('$u\'_y$',fontsize=36,pad=padding)
+  ax.imshow(var2_xk.T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  plt.savefig('./out/vks_dmd_recon_full.pdf', writer="PillowWriter", fps=6)
+
+  print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'decay',end='\r')
+  total = sum(Sigma)
+  cumulative=[1]
+
+  for eig in Sigma:
+      val = eig/total
+      cumulative = cumulative + [cumulative[-1]-val]
+
+  x2 = np.arange(0,len(cumulative))
+  #CUMULATIVE PLOT
+  plt.figure(tight_layout=True)
+  plt.plot(x2,cumulative, 'k')
+  plt.xlabel('Number of Modes $(N)$',fontsize=36)
+  plt.ylabel('$1-I(N)$',fontsize=36)
+  plt.yscale('log')
+  plt.yticks(np.logspace(-10,0,11))
+  plt.ylim(1e-10,1)
+  plt.savefig('./out/vks_dmd_decay_full.pdf', format="pdf", bbox_inches="tight") 
+  print("Relative information value is {:.5f} for {} modes.".format(1-cumulative[num_dmd_modes],num_dmd_modes))
+  print('dmd full ({})'.format(num_dmd_modes)+'.'*20+'complete')
 
 
-exit()
+  """DMD Decomposition Non-Transient"""
+  s_ind = 100
+  e_ind = 398
+  pred = vks.shape[0]
+  num_dmd_modes=24
+  lifts=('cos','sin','quad','cube')
+  X, Atilde,Ur,Phi,Lambda,Sigma,b = DMD2(vks, s_ind, e_ind, num_dmd_modes, lifts=lifts)
+  dmd_modes = Phi.reshape([2]+[len(lifts)+1]+list(vks.shape[1:-1])+[num_dmd_modes])
+  np.savez('./out/pth/vks_nonT_dmd_24.npz',[None,dmd_modes,X,Atilde,Ur,Phi,Lambda,Sigma,b,lifts])
+  m=2
+  n = num_dmd_modes//m
+  print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'modes',end='\r')
+  plt.figure(tight_layout=True)
+  for i in range(num_dmd_modes):
+      plt.subplot(num_dmd_modes,4,4*i+1)
+      plt.imshow(np.real(dmd_modes[0,0,:,:,i].T),aspect='auto')
+      plt.subplot(num_dmd_modes,4,4*i+2)
+      plt.imshow(np.imag(dmd_modes[0,0,:,:,i].T),aspect='auto')
+      plt.subplot(num_dmd_modes,4,4*i+3)
+      plt.imshow(np.real(dmd_modes[1,0,:,:,i].T),aspect='auto')
+      plt.subplot(num_dmd_modes,4,4*i+4)
+      plt.imshow(np.imag(dmd_modes[1,0,:,:,i].T),aspect='auto')
+  plt.savefig('./out/vks_dmd_modes_nonT.pdf', format="pdf", bbox_inches="tight")
+  print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'animation',end='\r')
+  fig, axes = plt.subplots(2,1,tight_layout=True)
+  lines = []
+  for ax in axes.flatten():
+      lines = lines + [ax.imshow(np.zeros(domain_shape),
+                  origin='upper', vmin=-.4, vmax=.4, aspect='auto')]
+
+  def run(vks_t):
+      Lambda_k = np.linalg.matrix_power(Lambda,vks_t)
+      Xk=Phi@Lambda_k@b
+      var1_xk = np.real(Xk[:domain_len].reshape(domain_shape))
+      var2_xk = np.real(Xk[domain_len:2*domain_len].reshape(domain_shape))
+      lines[0].set_data(var1_xk.T)
+      lines[1].set_data(var2_xk.T)
+      return lines
+
+  ani = animation.FuncAnimation(fig, run, blit=True, interval=pred,
+      repeat=False)
+  ani.save('./out/vks_dmd_recon_nonT.gif', writer="PillowWriter", fps=6);
+
+  print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'static',end='\r')
+  Lambda_k = np.linalg.matrix_power(Lambda,150)
+  Xk=Phi@Lambda_k@b
+  var1_xk = np.real(Xk[:domain_len].reshape(domain_shape))
+  var2_xk = np.real(Xk[domain_len:2*domain_len].reshape(domain_shape))
+  fig=plt.figure(tight_layout=True)
+  ax = plt.subplot(211)
+  ax.set_title('$u\'_x$',fontsize=36,pad=padding)
+  ax.imshow(var1_xk.T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  ax = plt.subplot(212)
+  ax.set_title('$u\'_y$',fontsize=36,pad=padding)
+  ax.imshow(var2_xk.T, origin='upper', vmin =-.4,vmax =.4, aspect='auto')
+  plt.savefig('./out/vks_dmd_recon_nonT.pdf', writer="PillowWriter", fps=6)
+
+  print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'decay',end='\r')
+
+  total = sum(Sigma)
+  cumulative=[1]
+
+  for eig in Sigma:
+      val = eig/total
+      cumulative = cumulative + [cumulative[-1]-val]
+
+  x2 = np.arange(0,len(cumulative))
+  #CUMULATIVE PLOT
+  plt.figure(tight_layout=True)
+  plt.plot(x2,cumulative, 'k')
+  plt.xlabel('Number of Modes $(N)$',fontsize=36)
+  plt.ylabel('$1-I(N)$',fontsize=36)
+  plt.yscale('log')
+  plt.yticks(np.logspace(-10,0,11))
+  plt.ylim(1e-10,1)
+  plt.savefig('./out/vks_dmd_decay_nonT.pdf', format="pdf", bbox_inches="tight") 
+  print("Relative information value is {:.5f} for {} modes.".format(1-cumulative[num_dmd_modes],num_dmd_modes))
+  print('dmd non-transient ({})'.format(num_dmd_modes)+'.'*20+'complete')
+
 """
 KPP EXAMPLE
 
@@ -464,7 +463,7 @@ plt.rcParams['font.family']='Times New Roman'
 fig = plt.figure(tight_layout=True)
 ax1 = fig.add_subplot(projection='3d')
 ax1.set_zlim(0, 10)
-lines =[ax1.plot_surface(xv, yv, np.ones((20,20)), cmap=cm.coolwarm, linewidth=0)]
+lines =[ax1.plot_surface(xv, yv, np.ones((kpp.shape[1],kpp.shape[2])), cmap=cm.coolwarm, linewidth=0)]
 
 def kpp_init_anim(kpp_t):
     ax1.clear()
@@ -585,6 +584,8 @@ for i in range(num_dmd_modes):
   ax2 = fig.add_subplot(num_dmd_modes,2,i*2+2,projection='3d')
   ax2.plot_surface(xv,yv,np.imag(dmd_modes[:,:,i]),cmap=cm.coolwarm,linewidth=0)
 plt.savefig('./out/kpp_dmd_modes.pdf', format="pdf", bbox_inches="tight")
+
+exit()
 
 """
 EE EXAMPLE

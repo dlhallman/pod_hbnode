@@ -24,7 +24,6 @@ from lib.vis.reconstruct import data_reconstruct
 """INPUT ARGUMETNS"""
 parser = argparse.ArgumentParser(prefix_chars='-+/',
     description='[NODE] NODE parameters.')
-#DATA PARAMS
 data_parser = parser.add_argument_group('Data Parameters')
 data_parser.add_argument('--dataset', type=str, default='VKS',
                     help='Dataset types: [VKS, EE].')
@@ -41,7 +40,6 @@ data_parser.add_argument('--val_ind', type=int, default=100,
                     help='Time index for validation data.' )
 data_parser.add_argument('--eval_ind', type=int, default=200,
                     help='Time index for evaluation data.' )
-#MODEL PARAMS
 model_parser = parser.add_argument_group('Model Parameters')
 model_parser.add_argument('--model', type=str, default='NODE',
                     help='Dataset types: [NODE , HBNODE].')
@@ -63,7 +61,6 @@ model_parser.add_argument('--lr', type=float, default=0.00153,
                     help = 'Initial learning rate.')
 model_parser.add_argument('--factor', type=float, default=0.99,
                     help = 'Factor for reducing learning rate.')
-#UNIQUE PARAMS
 uq_params = parser.add_argument_group('Unique Parameters')
 uq_params.add_argument('--seed', type=int, default=1242,
                 help='Set initialization seed')
@@ -77,10 +74,9 @@ if args.verbose:
         print('\t',arg, getattr(args, arg))
 
 """INITIALIZE"""
-#SETTNGS
 set_seed(args.seed)
-#FORMAT OUTDIR
 set_outdir(args.out_dir, args)
+
 #LOAD DATA
 vae = VAE_DATASET(args)
 
@@ -146,7 +142,7 @@ for epoch in epochs:
     kl_loss = torch.mean(analytic_kl, dim=0)
     loss = criterion(output_vae_t, vae.train_data) + kl_loss
     epochs.set_description('loss:{:.3f}'.format(loss))
-    rec['loss'] = loss
+    rec['tr_loss'] = loss
     rec['forward_nfe'] = node.nfe
 
     #BACK PROP
@@ -175,8 +171,8 @@ for epoch in epochs:
         meter_valid.update(loss_v.item())
         lossVal.append(meter_valid.avg)
 
-        rec['va_nfe'] = node.nfe
-        rec['va_loss'] = loss_v
+        rec['val_nfe'] = node.nfe
+        rec['val_loss'] = loss_v
 
         enc.train()
         node.train()

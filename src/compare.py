@@ -34,6 +34,6 @@ if 'forward_nfe' in args.comparisons:
 if 'backward_nfe' in args.comparisons:
     compare_nfe(args.file_list,args.model_list,'backward_nfe',args)   
 if 'tr_loss' in args.comparisons:
-    compare_loss(args.file_list,args.model_list,'loss',args)   
+    compare_loss(args.file_list,args.model_list,'tr_loss',args)   
 if 'val_loss' in args.comparisons:
-    compare_loss(args.file_list,args.model_list,'va_loss',args)   
+    compare_loss(args.file_list,args.model_list,'val_loss',args)   

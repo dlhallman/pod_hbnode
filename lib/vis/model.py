@@ -41,7 +41,7 @@ def plot_loss(fname,args):
 
     with open(fname, 'r') as f:
         df = pd.read_csv(f, index_col=False)
-    index_ = ['loss', 'va_loss']
+    index_ = ['tr_loss', 'val_loss']
     color = ['k','r--']
     losses = df[index_].values
     plt.figure(tight_layout=True)
@@ -74,19 +74,24 @@ def plot_nfe(fname,index_,args):
     return 1
 
 """  ADJOINT GRADIENT PLOT """
-def plot_AdjGrad(fname,args, show=False):
+def plot_adjGrad(fname,args,show=False):
+    plt.style.use('classic')
+    plt.rcParams['font.family']='Times New Roman'
+    plt.rcParams['xtick.minor.size']=0
+    plt.rcParams['ytick.minor.size']=0
     with open(fname, 'r') as f:
         df = pd.read_csv(f, index_col=False)
-    index_ = ['grad_{}'.format(i) for i in range(args.seq_win)]
+    index_ = ['grad_{}'.format(i) for i in range(args.seq_ind)]
     grad = df[index_].values
-    plt.figure(tight_layout = True, dpi=DPI)
+    plt.figure(tight_layout = True)
     plt.imshow(grad.T, vmin=0, vmax = .05, cmap='inferno', aspect='auto')
     plt.colorbar()
     plt.title(args.model+' Adjoint Gradient')
     plt.xlabel('Epoch')
     plt.ylabel('$T-t$')
     
-    plt.savefig(args.out_dir+'/'+args.model+'/AdjGrad.pdf', format="pdf", bbox_inches="tight")
+    end_str = str(args.out_dir+'/'+args.model+'_adjGrad')
+    plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
     return 1
 
@@ -102,8 +107,10 @@ def plot_stiff(fname,args, clip=1, show=False):
     for i,loss in enumerate(losses.T):
         plt.plot(loss,color[i],label=index_[i])
     plt.legend()
-    
-    plt.savefig(args.out_dir+'/'+args.model+'/Stiffness.pdf', format="pdf", bbox_inches="tight")
+    plt.yscale('log')
+
+    end_str = str(args.out_dir+'/'+args.model+'_stiffness')
+    plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
     return 1
 

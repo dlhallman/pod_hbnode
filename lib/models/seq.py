@@ -44,10 +44,6 @@ class temprnn(nn.Module):
         self.dense2 = nn.Linear(2 * nhidden, 2 * nhidden)
         self.dense3 = nn.Linear(2 * nhidden, 2 * out_channels)
 
-        # torch.nn.init.uniform(self.dense1.weight, -EPS, EPS)
-        # torch.nn.init.uniform(self.dense2.weight, -EPS, EPS)
-        # torch.nn.init.uniform(self.dense3.weight, -EPS, EPS)
-
         self.cont = cont
         self.res = res
     def forward(self, h, x):
@@ -68,10 +64,6 @@ class nodernn(nn.Module):
         self.dense2 = nn.Linear(nhidden * 2, nhidden * 2)
         self.dense3 = nn.Linear(nhidden * 2, out_channels)
 
-        # torch.nn.init.uniform(self.dense1.weight, -EPS, EPS)
-        # torch.nn.init.uniform(self.dense2.weight, -EPS, EPS)
-        # torch.nn.init.uniform(self.dense3.weight, -EPS, EPS)
-
     def forward(self, h, x):
         out = torch.cat([h, x], dim=1).to(DEVICE)
         out = self.dense1(out)
@@ -89,7 +81,6 @@ class tempf(nn.Module):
         self.dense1 = nn.Linear(in_channels, out_channels)
         self.dense2 = nn.Linear(out_channels, out_channels)
         self.dense3 = nn.Linear(out_channels, out_channels)
-        # torch.nn.init.uniform(self.dense1.weight,-EPS, EPS)
     def forward(self, h, x):
         out = self.dense1(x)
         #out = self.actv(out)
@@ -101,7 +92,7 @@ class tempout(nn.Module):
         super().__init__()
         self.actv = nn.Tanh()
         self.dense1 = nn.Linear(in_channels, out_channels)
-        torch.nn.init.uniform(self.dense1.weight, -EPS, EPS).to(DEVICE)
+        #torch.nn.init.uniform(self.dense1.weight, -EPS, EPS).to(DEVICE)
     def forward(self, x):
         out = self.dense1(x)
         return out
@@ -227,7 +218,7 @@ class GHBMODEL(nn.Module):
         self.ode_rnn = ODE_RNN_with_Grad_Listener(self.cell, self.rnn, (2, nhid), None, tol=1e-7)
         self.outlayer = nn.Linear(nhid, modes)
 
-        torch.nn.init.uniform(self.outlayer.weight, -EPS, EPS).to(DEVICE)
+        #torch.nn.init.uniform(self.outlayer.weight, -EPS, EPS).to(DEVICE)
 
 
     def forward(self, t, x):

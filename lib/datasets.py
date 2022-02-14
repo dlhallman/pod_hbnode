@@ -293,8 +293,8 @@ class SEQ_DATASET:
         self.seq_label = seq_label
                 
         # training data
-        train_data = seq_data[:, :tr_ind-args.seq_ind, :]
-        train_label = seq_label[:, :tr_ind-args.seq_ind, :]
+        train_data = seq_data[:, :tr_ind, :]
+        train_label = seq_label[:, :tr_ind, :]
         self.train_data =  torch.FloatTensor(train_data)
         self.mean_data = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
         self.std_data = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
@@ -306,8 +306,8 @@ class SEQ_DATASET:
         self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(args.device)
 
         # validation data
-        val_data = (seq_data[:, tr_ind:val_ind-args.seq_ind, :]-self.mean_data)/self.std_data
-        val_label = (seq_label[:, tr_ind:val_ind-args.seq_ind, :]-self.mean_data)/self.std_data
+        val_data = (seq_data[:, tr_ind:val_ind, :]-self.mean_data)/self.std_data
+        val_label = (seq_label[:, tr_ind:val_ind, :]-self.mean_data)/self.std_data
         self.valid_data =  torch.FloatTensor(val_data).to(args.device)
         self.valid_label = torch.FloatTensor(val_label).to(args.device)
         self.valid_times = (torch.ones(val_data.shape[:-1])/val_data.shape[1]).to(args.device)

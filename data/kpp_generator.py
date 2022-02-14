@@ -26,7 +26,7 @@ xl = -2.0
 xr = 2.0
 yl = -2.5
 yr = 1.5
-T = 10
+T = 100
 
 # Spatial discretization
 Nx = 100

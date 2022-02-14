@@ -17,7 +17,7 @@ from lib.utils.misc import set_outdir,set_seed, Recorder
 from lib.utils.seq_helper import *
 from lib.vis.animate import data_animation
 from lib.vis.modes import mode_prediction
-from lib.vis.model import plot_loss, plot_nfe
+from lib.vis.model import plot_loss, plot_nfe, plot_adjGrad, plot_stiff
 from lib.vis.reconstruct import data_reconstruct
 
 
@@ -43,18 +43,18 @@ data_parser.add_argument('--val_ind', type=int, default=100,
 model_params = parser.add_argument_group('Model Parameters')
 model_params.add_argument('--model', type=str, default='HBNODE',
                     help='Model choices - GHBNODE, HBNODE, NODE.')
-data_parser.add_argument('--batch_size', type=int, default=20,
+model_params.add_argument('--batch_size', type=int, default=20,
                 help='Time index for validation data.' )
-data_parser.add_argument('--seq_ind', type=int, default=10,
+model_params.add_argument('--seq_ind', type=int, default=9,
                 help='Time index for validation data.' )
-data_parser.add_argument('--layers', type = int, default = 12,
-                    help = 'Number of hidden layers. Node: Value becomes modes*layers.')
+model_params.add_argument('--layers', type = int, default=1,
+                    help = 'Number of hidden layers.')
 model_params.add_argument('--corr', type=int, default=0,
                     help='Skip gate input into soft max function.')
 train_params = parser.add_argument_group('Training Parameters')
 train_params.add_argument('--epochs', type=int, default=500,
                     help='Training epochs.')
-train_params.add_argument('--lr', type=float, default=0.01,
+train_params.add_argument('--lr', type=float, default=0.001,
                     help = 'Initial learning rate.')
 train_params.add_argument('--factor', type=float, default=0.99,
                     help = 'Initial learning rate.')
@@ -79,11 +79,9 @@ if args.verbose:
 
 
 """INITIALIZE"""
-#SETTNGS
 set_seed(args.seed)
-#FORMAT OUTDIR
 set_outdir(args.out_dir, args)
-#LOAD DATA
+
 seq = SEQ_DATASET(args)
 args.modes = seq.data_args.modes
 
@@ -129,9 +127,9 @@ for epoch in epochs:
         predict = model(seq.train_times[:, b_n:b_n + batchsize], seq.train_data[:, b_n:b_n + batchsize])
         loss = criteria(predict, seq.train_label[:, b_n:b_n + batchsize])
         loss_meter_t.update(loss.item())
-        rec['loss'] = loss
+        rec['tr_loss'] = loss
         rec['forward_nfe'] = model.cell.nfe
-        rec['forward_stiff'] = model.cell.stiff
+        rec['forward stiff'] = model.cell.stiff
         epochs.set_description('loss:{:.3f}'.format(loss))
 
         #BACKPROP
@@ -157,9 +155,9 @@ for epoch in epochs:
         model.cell.nfe = 0
         predict = model(seq.valid_times, seq.valid_data)
         vloss = criteria(predict, seq.valid_label)
-        rec['va_nfe'] = model.cell.nfe
-        rec['va_stiff'] = model.cell.stiff
-        rec['va_loss'] = vloss
+        rec['val_nfe'] = model.cell.nfe
+        rec['val_stiff'] = model.cell.stiff
+        rec['val_loss'] = vloss
 
     #TEST
 #    if epoch == 0 or (epoch + 1) % 5 == 0:
@@ -179,24 +177,24 @@ for epoch in epochs:
 
 
 print("Generating Output ... ")
+rec_file = args.out_dir+ './pth/'+args.model+'.csv'
+rec.writecsv(rec_file)
 args.modes = seq.data_args.modes
 args.model = str('seq_'+args.model).lower()
-predictions = model(seq.valid_times, seq.valid_data).cpu().detach().numpy()
+tr_pred= model(seq.train_times, seq.train_data).cpu().detach().numpy()[-1]
+val_pred = model(seq.valid_times, seq.valid_data).cpu().detach().numpy()[-1]
+predictions=np.vstack((tr_pred,val_pred))
 normalized = (predictions*seq.std_data+seq.mean_data)
-times = np.arange(seq.data_args.tstart+args.tr_ind+args.seq_ind,seq.data_args.tstart+args.val_ind)
+times = np.arange(seq.data_args.tstart+args.seq_ind,seq.data_args.tstart+args.val_ind)
 #DATA PLOTS
 verts = [seq.data_args.tstart+args.tr_ind]
-print(seq.data[:args.val_ind].shape)
-mode_prediction(normalized[-1,:,:4],seq.data[args.tr_ind+args.seq_ind:args.val_ind],times,verts,args)
+mode_prediction(normalized[:,:4],seq.seq_label[-1,:args.val_ind],times,verts,args)
 val_recon = pod_mode_to_true(seq.pod_dataset,normalized,args)
 data_reconstruct(val_recon,-1,args)
 #data_animation(val_recon,args)
 
 #MODEL PLOTS
 plot_loss(rec_file, args)
-plot_nfe(rec_file, args)
-plot_AdjGrad(args.out_dir+'/pth/{}.csv'.format(args.model),args)
-plot_stiff(args.out_dir+'/pth/{}.csv'.format(args.model),args)
-predictions = model(seq.valid_times, seq.valid_data).cpu().detach().numpy()
-val_recon = pod_mode_to_true(seq,predictions,args)
-data_reconstruct(val_recon,-1,args,heat=True)
+plot_nfe(rec_file,'forward_nfe', args)
+plot_adjGrad(rec_file, args)
+plot_stiff(rec_file, args)
