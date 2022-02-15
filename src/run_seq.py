@@ -47,7 +47,7 @@ model_params.add_argument('--batch_size', type=int, default=20,
                 help='Time index for validation data.' )
 model_params.add_argument('--seq_ind', type=int, default=9,
                 help='Time index for validation data.' )
-model_params.add_argument('--layers', type = int, default=1,
+model_params.add_argument('--layers', type = int, default=12,
                     help = 'Number of hidden layers.')
 model_params.add_argument('--corr', type=int, default=0,
                     help='Skip gate input into soft max function.')

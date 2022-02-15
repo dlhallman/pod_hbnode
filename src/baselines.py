@@ -69,7 +69,7 @@ def run():
   e_ind=time_len
   num_pod_modes=8
   spatial_modes, pod_modes, eigenvalues, vx_mnstrt, vy_mnstrt = POD2(vks, s_ind, e_ind, num_pod_modes)
-  np.savez('./out/pth/vks_full_pod_8.npz',[None,spatial_modes,pod_modes,eigenvalues,vx_mnstrt,vy_mnstrt])
+  np.savez('./out/pth/vks_pod_8.npz',[None,spatial_modes,pod_modes,eigenvalues,vx_mnstrt,vy_mnstrt])
   fig, axes = plt.subplots(2,1, tight_layout=True)
   lines = []
   for ax in axes.flatten():
@@ -456,6 +456,7 @@ yv = np.tile(np.linspace(-2.4,1.4,kpp.shape[2]),(kpp.shape[1],1)).T
 domain_shape=kpp.shape[1:]
 domain_len=kpp.shape[1]*kpp.shape[2]
 time_len=kpp.shape[0]
+print(kpp.shape)
 print('init'+'.'*20+'animation',end='\r')
 plt.style.use('default')
 plt.rcParams['font.family']='Times New Roman'
@@ -505,7 +506,7 @@ ani = animation.FuncAnimation(fig, kpp_mnstrt_anim, blit=True, interval=kpp.shap
 ani.save('./out/kpp_mnstrt_data.gif', writer="PillowWriter", fps=6);
 print('mean subtracted'+'.'*20+'complete')
 
-print('pod full ({})'.format(num_pod_modes)+'.'*20+'animation',end='\r')
+print('pod ({})'.format(num_pod_modes)+'.'*20+'animation',end='\r')
 kpp_reconstructed = pod_modes@spatial_modes.T
 kpp_reconstructed = kpp_reconstructed.reshape(kpp.shape)
 plt.style.use('default')
@@ -528,7 +529,7 @@ ani = animation.FuncAnimation(fig, kpp_pod_lines, blit=True, interval=kpp.shape[
     repeat=False)
 ani.save('./out/kpp_pod_recon.gif', writer="PillowWriter", fps=6)
 
-print('pod full ({})'.format(num_pod_modes)+'.'*20+'modes',end='\r')
+print('pod ({})'.format(num_pod_modes)+'.'*20+'modes',end='\r')
 m=2
 plt.style.use('classic')
 plt.rcParams['font.family']='Times New Roman'
@@ -542,15 +543,15 @@ for i in range(num_pod_modes):
     plt.ylabel('$\\alpha_{}(t)$'.format(i+1),fontsize=36)
 plt.savefig('./out/kpp_pod_modes.pdf', format="pdf", bbox_inches="tight")
 
-print('pod full ({})'.format(num_pod_modes)+'.'*20+'decay',end='\r')
+print('pod ({})'.format(num_pod_modes)+'.'*20+'decay',end='\r')
 plt.style.use('classic')
 plt.rcParams['font.family']='Times New Roman'
 plt.rcParams['xtick.minor.size']=0
 plt.rcParams['ytick.minor.size']=0
 s_ind=0
 e_ind=time_len
-num_pod_modes=time_len
-spatial_modes, pod_modes, eigenvalues, kpp_mnstrt= PODKPP(kpp, s_ind, e_ind, num_pod_modes)
+full_pod_modes=time_len
+spatial_modes, pod_modes, eigenvalues, kpp_mnstrt= PODKPP(kpp, s_ind, e_ind, full_pod_modes)
 total = sum(eigenvalues)
 cumulative=[1]
 
@@ -566,6 +567,8 @@ plt.plot(x2,cumulative, 'k')
 plt.xlabel('Number of Modes $(N)$',fontsize=36)
 plt.ylabel('$1-I(N)$',fontsize=36)
 plt.savefig('./out/kpp_pod_decay.pdf', format="pdf", bbox_inches="tight")
+
+print('Relative Information Value {}'.format(cumulative[num_pod_modes]))
 
 """DMD Decomposition"""
 plt.style.use('default')

@@ -11,14 +11,14 @@ $1 src/run_pod.py \
    --tstop 400 \
     --tpred 100
 
-#$1 src/run_dmd.py \
-#    --dataset VKS \
-#    --data_dir ./data/VKS.pkl \
-#    --out_dir ./out/nonT_pred/ \
-#    --modes 24 \
-#    --tstart 100 \
-#    --tstop 180 \
-#    --tpred 100
+$1 src/run_dmd.py \
+    --dataset VKS \
+    --data_dir ./data/VKS.pkl \
+    --out_dir ./out/nonT_pred/ \
+    --modes 24 \
+    --tstart 100 \
+    --tstop 180 \
+    --tpred 100
 
 
 echo "GENERATING NON-TRANSIENT VKS VAE PREDICTIONS"

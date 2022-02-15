@@ -2,17 +2,17 @@
 # !/bin/sh
 echo "USING PYTHON EXECUTABLE $1"
 
-#echo "GENERATING VKS NON-TRANSIENT PREDICTIONS"
-#$1 src/run_pod.py \
-#    --dataset VKS \
-#    --data_dir ./data/VKS.pkl \
-#    --out_dir ./out/full/ \
-#    --modes 8 \
-#    --tstart 0 \
-#    --tstop 400 \
-#    --tpred 200
+echo "GENERATING VKS NON-TRANSIENT PREDICTIONS"
+$1 src/run_pod.py \
+    --dataset VKS \
+    --data_dir ./data/VKS.pkl \
+    --out_dir ./out/full/ \
+    --modes 8 \
+    --tstart 0 \
+    --tstop 400 \
+    --tpred 200
 
-echo "GENERATING TRANSIENT VKS VAE PREDICTIONS"
+echo "GENERATING TRANSIENT VKS SEQ PREDICTIONS"
 $1 src/run_seq.py \
     --dataset VKS \
     --data_dir ./data/VKS.pkl \

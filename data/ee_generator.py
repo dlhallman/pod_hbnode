@@ -2,13 +2,12 @@
 
 import numpy as np
 from matplotlib import pyplot as plt
-from tqdm import trange
 np.seterr(divide='ignore', invalid='ignore')
 
 gamma = 7/5.
 
 # Grid
-N = 500
+N = 1000
 h = 10./N
 dt = h**2
 lam = dt/h
@@ -17,7 +16,7 @@ alpha = 1
 
 inds = np.arange(N)
 
-p1_range = [1, 2] # left-hand value of initial density and boundary condition
+p1_range = [3, 4] # left-hand value of initial density and boundary condition
 p2_range = [2, 3] # left-hand value of initial velocity and boundary condition
 Nparamgrid = 10
 
@@ -25,11 +24,11 @@ Nparamgrid = 10
 p1 = 3.857143 
 p2 = 2.629369
 
-p1 = 1
-p2 = 1
+p1 = 3
+p2 = 2
 
 # Downsamples in time by this factor
-downsample_rate = 20
+downsample_rate = 100
 
 # Define the vector-valued function f (of vector valued input uu)
 def f(uu):
@@ -84,7 +83,7 @@ def p_init(x, p1val, p2val):
 xc = np.linspace(-5.,5.,N+1)[:-1] + h/2.
 
 # Terminal time
-T = 5
+T = 1.8
 
 M = 1+int(np.floor(T/dt/downsample_rate))
 times = np.zeros(M)
@@ -95,7 +94,8 @@ dataE   = np.zeros([N, M, Nparamgrid**2])
 [p1s, p2s] = np.meshgrid(np.linspace(p1_range[0], p1_range[1], Nparamgrid), np.linspace(p2_range[0], p2_range[1], Nparamgrid))
 params = np.vstack([p1s.flatten(), p2s.flatten()]).T
 
-for pind in trange(params.shape[0]):
+for pind in range(params.shape[0]):
+    print(pind)
 
     p1, p2 = params[pind,0], params[pind,1]
 
@@ -122,7 +122,7 @@ for pind in trange(params.shape[0]):
     counter = 0
     index = 0
 
-    while t < T - 1e-5:
+    while t < T - 1e-12:
             if T-t < dt:
                     dt = T-t
                     lmbda = dt/h
@@ -147,22 +147,22 @@ for pind in trange(params.shape[0]):
                 dataE[:,index,pind]   = (gamma-1)*(uu[2,:] - 0.5*uu[0,:]*datau[:,index,pind]**2)
                 times[index] = t
 
-np.savez('data/EulerEqs.npz', datarho, datau, dataE, xc, params, times)
+np.savez('data.npz', datarho, datau, dataE, xc, params, times)
 
-# rho = uu[0,:]
-# u = uu[1,:]/rho
-# p = (gamma-1)*(uu[2,:]-1/2*rho*u**2)
+rho = uu[0,:]
+u = uu[1,:]/rho
+p = (gamma-1)*(uu[2,:]-1/2*rho*u**2)
 
-# fig = plt.figure(1)
-# plt.plot(xc,rho,'k--')
-# plt.plot(xc,rho_0,color='gray',linestyle='dashed')
+fig = plt.figure(1)
+plt.plot(xc,rho,'k--')
+plt.plot(xc,rho_0,color='gray',linestyle='dashed')
 
-# fig = plt.figure(2)
-# plt.plot(xc,u,'k--')
-# plt.plot(xc,u_0,color='gray',linestyle='dashed')
+fig = plt.figure(2)
+plt.plot(xc,u,'k--')
+plt.plot(xc,u_0,color='gray',linestyle='dashed')
 
-# fig = plt.figure(3)
-# plt.plot(xc,p,'k--')
-# plt.plot(xc,p_0,color='gray',linestyle='dashed')
+fig = plt.figure(3)
+plt.plot(xc,p,'k--')
+plt.plot(xc,p_0,color='gray',linestyle='dashed')
 
-# plt.show()
+plt.show()

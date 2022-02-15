@@ -17,13 +17,14 @@ def vks_plot(data,time,axis,args,index=None):
     return 1
 
 def kpp_plot(data,time,axis,args,index=None):
+    print(data.shape)
     plt.style.use('default')
     plt.rcParams['font.family'] = 'Times New Roman'
     plt.rcParams['xtick.minor.size'] = 0
     plt.rcParams['ytick.minor.size'] = 0
     xv =  np.tile(np.linspace(-2,2,data.shape[1]),(data.shape[2],1))
     yv = np.tile(np.linspace(-2.4,1.4,data.shape[2]),(data.shape[1],1)).T
-    axis.plot_surface(xv, yv, data[time], cmap=cm.coolwarm, linewidth=0)
+    axis.plot_surface(xv, yv, data[time,:,:], cmap=cm.coolwarm, linewidth=0)
     return 1
 
 def ee_plot(data,time,axis,index,args, heat=None):

@@ -26,11 +26,11 @@ xl = -2.0
 xr = 2.0
 yl = -2.5
 yr = 1.5
-T = 100
+T = 10
 
 # Spatial discretization
-Nx = 100
-Ny = 100
+Nx = 50
+Ny = 50
 hx = (xr - xl)/Nx
 hy = (yr - yl)/Ny
 
