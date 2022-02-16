@@ -8,6 +8,8 @@ def eig_decay(dataset,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
+    plt.rc('xtick',labelsize=18)
+    plt.rc('ytick',labelsize=18)
 
     total = dataset.lv.sum()
     decay=[1]
@@ -40,6 +42,8 @@ def plot_mode(modes,times,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
+    plt.rc('xtick',labelsize=10)
+    plt.rc('ytick',labelsize=10)
     plt.figure(tight_layout=True)
     for i,node in enumerate(modes.T):
         plt.subplot(2,2,i+1)
@@ -58,6 +62,8 @@ def mode_prediction(predictions,true,times,verts,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
+    plt.rc('xtick',labelsize=14)
+    plt.rc('ytick',labelsize=14)
     plt.figure(tight_layout=True)
     if len(times)!=len(predictions):
         times = np.arange(len(predictions))
@@ -67,9 +73,9 @@ def mode_prediction(predictions,true,times,verts,args):
         plt.plot(times,node, 'r', dashes=[1,1], label='Prediction')
         min_,max_=np.min(true.T[i]),np.max(true.T[i])
         plt.vlines(verts,ymin=min_+.2*min_,ymax=max_+.2*max_)
-        plt.xlabel("Time")
+        plt.xlabel("Time $(t)$",fontsize=48)
+        plt.ylabel("$\\alpha_{}$".format(i),fontsize=48)
         plt.ylim(bottom=min_+.2*min_,top=max_+.2*max_)
-        plt.ylabel("$\\alpha_{}$".format(i))
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper center',mode='expand', borderaxespad=0., prop={'size': 10}, frameon=False)
     #OUTPUT
     end_str = str(args.dataset+'_'+args.model+'_mode_pred').lower()

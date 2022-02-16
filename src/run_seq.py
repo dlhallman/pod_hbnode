@@ -67,6 +67,8 @@ uq_params.add_argument('--device', type=str, default='cpu',
                 help='Set default torch hardware device.')
 uq_params.add_argument('--seed', type=int, default=0,
                 help='Set initialization seed')
+uq_params.add_argument('--eeParam', type=int, default=1,
+                help='Set initialization seed')
 uq_params.add_argument('--verbose', default=False, action='store_true',
                 help='Number of display modes.')
 
@@ -84,6 +86,7 @@ set_outdir(args.out_dir, args)
 
 seq = SEQ_DATASET(args)
 args.modes = seq.data_args.modes
+args.eeParam = seq.data_args.eeParam
 
 
 MODELS = {'NODE' : NMODEL(args),'HBNODE' : HBMODEL(args, res=True, cont=True), 'GHBNODE' : GHBMODEL(args, res=True, cont=True)}

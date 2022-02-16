@@ -1,7 +1,7 @@
 # !/bin/sh
 echo "USING PYTHON EXECUTABLE $1"
 
-echo "GENERATING KPP NON-TRANSIENT PREDICTIONS"
+echo "GENERATING KPP BASELINES"
 $1 src/run_pod.py \
     --dataset KPP \
     --data_dir ./data/KPP.npz \
@@ -19,10 +19,10 @@ $1 src/run_dmd.py \
     --tstart 0 \
     --tstop 1000 \
     --tpred 1000 \
-	--lifts sin cos quad cube
+    --lifts sin cos quad cube
 
 
-echo "GENERATING TRANSIENT KPP PREDICTIONS"
+echo "GENERATING KPP PREDICTIONS"
 $1 src/run_seq.py \
     --dataset KPP \
     --data_dir ./data/KPP.npz \
@@ -30,7 +30,7 @@ $1 src/run_seq.py \
     --out_dir ./out/kpp/ \
     --tr_ind 800 \
     --val_ind 1000 \
-    --eval_ind 2000 \
+    --eval_ind 1251 \
     --batch_size 1000 \
     --model NODE
 

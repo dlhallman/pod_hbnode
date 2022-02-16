@@ -22,7 +22,8 @@ $1 src/run_seq.py \
     --val_ind 120 \
     --eval_ind 200 \
     --batch_size 100 \
-    --model NODE
+    --model NODE \
+    --epochs 2
 
 $1 src/run_seq.py \
     --dataset VKS \
@@ -33,7 +34,8 @@ $1 src/run_seq.py \
     --val_ind 120 \
     --eval_ind 200 \
     --batch_size 100 \
-    --model HBNODE 
+    --model HBNODE  \
+    --epochs 2
 
 echo "COMPARISON PLOTS"
 $1 src/compare.py \

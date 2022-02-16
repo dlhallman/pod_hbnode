@@ -40,6 +40,8 @@ decomp_parser.add_argument('--tstop', type=int, default=399,
 decomp_parser.add_argument('--tpred', type=int, default=50,
                     help='Output time for reduction along time axis.' )
 uq_params = parser.add_argument_group('Unique Parameters')
+uq_params.add_argument('--eeParam', type=int, default=1,
+                help='Set initialization seed')
 uq_params.add_argument('--verbose', default=False, action='store_true',
                 help='To display output or not.')
 args, unknown = parser.parse_known_args()

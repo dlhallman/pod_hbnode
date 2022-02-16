@@ -20,8 +20,10 @@ def VKS_DAT(data_file, param=None):
 def EE_DAT(data_dir, param=0):
   npzdata = np.load(data_dir)
   rho, u, E, x, params, t = npzdata['arr_0'], npzdata['arr_1'], npzdata['arr_2'], npzdata['arr_3'], npzdata['arr_4'], npzdata['arr_5']
-  ee = np.array([rho[:,:,param], u[:,:,param], E[:,:,param]], dtype=np.double)
-  ee = np.moveaxis(ee,0,-1)
+  ee = np.array([rho[:,:,:param], u[:,:,:param], E[:,:,:param]], dtype=np.double)
+  ee = np.moveaxis(ee,1,2)
+  ee=ee.reshape(ee.shape[:2]+(-1,1),order='F')[:,:,:,0]
+  ee=np.moveaxis(ee,0,-1)
   return ee
 
 def FIB_DAT(data_dir, param=None):
@@ -41,8 +43,8 @@ def KPP_DAT(data_dir, param=None):
 def EE_PARAM(data_dir):
   npzdata = np.load(data_dir)
   rho, u, E, x, params, t = npzdata['arr_0'], npzdata['arr_1'], npzdata['arr_2'], npzdata['arr_3'], npzdata['arr_4'], npzdata['arr_5']
-  return np.array([rho, u, E], dtype=np.double)
-
+  ee = np.array([rho, u, E], dtype=np.double)
+  return ee.T
 LOADERS = {'VKS':VKS_DAT, 'EE': EE_DAT, 'FIB' : FIB_DAT, 'KPP': KPP_DAT}
 
 
@@ -154,7 +156,7 @@ class POD_DATASET(Dataset):
         assert args.dataset in LOADERS
 
         print('Loading ... \t Dataset: {}'.format(args.dataset))
-        self.data_init = LOADERS[args.dataset](args.data_dir)
+        self.data_init = LOADERS[args.dataset](args.data_dir,args.eeParam)
         self.data = self.data_init.copy()
         self.shape = self.data_init.shape
 
@@ -281,6 +283,8 @@ class SEQ_DATASET:
         self.pod_dataset = POD_DATASET(args)
         self.data = self.pod_dataset.data
         self.data_args = self.pod_dataset.args
+        if args.dataset == 'EE' and args.eeParam!=self.data_args.eeParam:
+          raise Exception ('Euler Equation Params Do Not Match {} {}'.format(args.eeParam,self.data_args.eeParam))
 
         total_size = self.data.shape[0] - args.seq_ind
         
@@ -326,66 +330,67 @@ class PARAM_DATASET:
     def __init__(self, args):
         
         assert args.dataset == "EE"
+        self.args = args
 
         print('Loading ... \t Dataset: {}'.format(args.dataset))
         self.data_init = EE_PARAM(args.data_dir)
         self.data = self.data_init
-        self.params = self.data_init.shape[-1]
-        self.shape = self.data_init.shape
-        self.time_len = self.shape[0]
+        self.num_params = self.data_init.shape[0]
+        self.shape = self.data_init.shape[1:]
+        self.time_len = self.shape[1]
+
+
+
+
+        args.tstop = min(args.tstop, self.data.shape[1]+args.tstart-1)
+        
+        #SEQUENCE DATA
+        train_size = int(0.8 * self.num_params)
+        self.data_shuffled = self.data.copy()
+        np.random.shuffle(self.data_shuffled)
+        train =self.data_shuffled[:train_size]
+        valid =self.data_shuffled[train_size:]
+
+        self.data = np.moveaxis(self.data,[0,-1],[-1,1])
+        self.data = self.data.reshape(self.data.shape[:2]+(-1,1) ,order='F')[:,:,:,0]
+        train = np.moveaxis(train,[0,-1],[-1,1])
+        train = train.reshape(train.shape[:2]+(-1,1) ,order='F')[:,:,:,0]
+        valid = np.moveaxis(valid,[0,-1],[-1,1])
+        valid = valid.reshape(valid.shape[:2]+(-1,1) ,order='F')[:,:,:,0]
+
+        self.data = np.moveaxis(self.data,1,-1)
+        self.train = np.moveaxis(train,1,-1)
+        self.valid = np.moveaxis(valid,1,-1)
 
         self.reduce()
 
-        args.tstop = min(args.tstop, self.data.shape[0]+args.tstart-1)
-        
-        #SEQUENCE DATA
-        rev = args.tstop - (args.tstart + args.tr_ind)
-        train_size = 1 # int(0.8 * self.params)
-        self.train =self.data[:train_size]
-        self.eval =self.data[train_size:2] #remvoe 2 and pervious trainsize increase
-
+        total_size = self.data.shape[0] - args.seq_ind
 
         #SEQUENCE DATA
-        train_data = self.train[:,:args.tr_ind,:].swapaxes(0,1)
-        train_label = self.train[:,rev:,:].swapaxes(0,1)
-        self.mean = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
-        self.std = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
-        self.train_data = torch.FloatTensor((train_data - self.mean) / self.std)
+        train_data = np.vstack([[self.train_data[t:t + args.seq_ind, :] for t in range(total_size)]]).swapaxes(0,1)
+        train_label = np.vstack([[self.train_data[t+1:t+args.seq_ind+1, :] for t in range(total_size)]]).swapaxes(0,1)
+        self.mean_data = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
+        self.std_data = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
+        self.train_data = torch.FloatTensor((train_data - self.mean_data) / self.std_data)
 
         self.train_label = torch.FloatTensor(train_label).to(args.device)
-        self.train_label = torch.FloatTensor((train_label - self.mean) / self.std)
+        self.train_label = torch.FloatTensor((train_label - self.mean_data) / self.std_data)
         self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(args.device)
 
-        eval_data = self.eval[:,:args.tr_ind, :].swapaxes(0,1)
-        eval_label = self.eval[:,rev:, :].swapaxes(0,1)
-        self.eval_data =  torch.FloatTensor(eval_data).to(args.device)
-        self.eval_label = torch.FloatTensor(eval_label).to(args.device)
-        self.eval_times = (torch.ones(eval_data.shape[:-1])/eval_data.shape[1]).to(args.device)
+        valid_data = np.vstack([[self.valid_data[t:t + args.seq_ind, :] for t in range(total_size)]]).swapaxes(0,1)
+        valid_label = np.vstack([[self.valid_data[t+1:t+args.seq_ind+1, :] for t in range(total_size)]]).swapaxes(0,1)
+        self.valid_data =  torch.FloatTensor(valid_data).to(args.device)
+        self.valid_label = torch.FloatTensor(valid_label).to(args.device)
+        self.valid_times = (torch.ones(valid_data.shape[:-1])/valid_data.shape[1]).to(args.device)
 
+
+    """POD Model Reduction"""
     def reduce(self):
-        """POD Model Reduction"""
-        print('Reducing ... \t Modes: {}'.format(self.modes))
+        args = self.args
+        print('Reducing ... \t Modes: {}'.format(args.modes))
+        self.spatial_modes, self.data, self.lv, self.rho_flux, self.v_flux, self.e_flux = POD3(self.data, args.tstart, args.tstop, args.modes)
+        _, self.train_data, _, _, _, _ = POD3(self.train, args.tstart, args.tstop, args.modes)
+        _, self.valid_data, _, _, _, _ = POD3(self.valid, args.tstart, args.tstop, args.modes)
 
-        #POD CALL
-        if self.dataset == 'EE':
-            self.spatial_modes = []
-            self.temp = []
-            self.lv = []
-            self.ux = []
-            self.uy = []
-            self.uz = []
-            for i in range(self.params):
-                spatial_modes, temp, lv, ux, uy, uz = POD3(self.data[:,:,:,i], self.tstart, self.tstop, self.modes)
-                self.spatial_modes = self.spatial_modes + [spatial_modes]
-                self.temp = self.temp + [temp]
-                self.lv = self.lv + [lv]
-                self.ux = self.ux + [ux]
-                self.uy = self.uy + [uy]
-                self.uz = self.uz + [uz]
-
-            self.spatial_modes = np.array(self.spatial_modes)
-            self.data = np.array(self.temp)
-            self.lv = np.array(self.lv)
-            self.ux = np.array(self.ux)
-            self.uy = np.array(self.uy)
-            self.uz = np.array(self.uz)
+    def reconstruct(self):
+      self.data_recon = pod_mode_to_true(self,self.data,self.args)

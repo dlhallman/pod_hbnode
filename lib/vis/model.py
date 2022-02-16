@@ -38,6 +38,8 @@ def plot_loss(fname,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
+    plt.rc('xtick',labelsize=18)
+    plt.rc('ytick',labelsize=18)
 
     with open(fname, 'r') as f:
         df = pd.read_csv(f, index_col=False)
@@ -48,6 +50,8 @@ def plot_loss(fname,args):
     for i,loss in enumerate(losses.T):
         plt.plot(loss,color[i],label=index_[i])
     plt.legend()
+    plt.yticks(np.logspace(-5,0,6))
+    plt.ylim(1e-5,1)
     plt.yscale('log')
     end_str = str(args.out_dir+'/'+args.model+'_loss')
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
@@ -60,6 +64,8 @@ def plot_nfe(fname,index_,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
+    plt.rc('xtick',labelsize=18)
+    plt.rc('ytick',labelsize=18)
 
     with open(fname, 'r') as f:
         df = pd.read_csv(f, index_col=False)
@@ -79,14 +85,15 @@ def plot_adjGrad(fname,args,show=False):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
+    plt.rc('xtick',labelsize=18)
+    plt.rc('ytick',labelsize=18)
     with open(fname, 'r') as f:
         df = pd.read_csv(f, index_col=False)
     index_ = ['grad_{}'.format(i) for i in range(args.seq_ind)]
     grad = df[index_].values
     plt.figure(tight_layout = True)
-    plt.imshow(grad.T, vmin=0, vmax = .05, cmap='inferno', aspect='auto')
+    plt.imshow(grad.T, origin='upper', vmin=0, vmax = .05, cmap='inferno', aspect='auto')
     plt.colorbar()
-    plt.title(args.model+' Adjoint Gradient')
     plt.xlabel('Epoch')
     plt.ylabel('$T-t$')
     
@@ -103,7 +110,6 @@ def plot_stiff(fname,args, clip=1, show=False):
     color = ['k','r--']
     losses = df[index_].values
     plt.figure(tight_layout=True)
-    plt.title(args.dataset+' '+args.model)
     for i,loss in enumerate(losses.T):
         plt.plot(loss,color[i],label=index_[i])
     plt.legend()
@@ -123,6 +129,8 @@ def compare_nfe(file_list,model_list,index_,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
+    plt.rc('xtick',labelsize=18)
+    plt.rc('ytick',labelsize=18)
 
     fig = plt.figure(tight_layout=True)
     ax=fig.axes
@@ -145,6 +153,8 @@ def compare_loss(file_list,model_list,index_,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
+    plt.rc('xtick',labelsize=18)
+    plt.rc('ytick',labelsize=18)
 
     fig = plt.figure(tight_layout=True)
     ax=fig.axes
@@ -155,6 +165,8 @@ def compare_loss(file_list,model_list,index_,args):
         plt_args={'label':model_list[i],'color':args.color_list[i]}
         ax_loss(losses[::args.epoch_freq],plt_args)
 
+    plt.yticks(np.logspace(-5,0,6))
+    plt.ylim(1e-5,1)
     plt.yscale('log')
     plt.legend()
     end_str = str(args.out_dir+'/compare_'+index_)

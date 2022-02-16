@@ -95,7 +95,6 @@ dataE   = np.zeros([N, M, Nparamgrid**2])
 params = np.vstack([p1s.flatten(), p2s.flatten()]).T
 
 for pind in range(params.shape[0]):
-    print(pind)
 
     p1, p2 = params[pind,0], params[pind,1]
 

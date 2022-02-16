@@ -4,7 +4,7 @@ from einops import rearrange
 from torch import nn
 from torchdiffeq import odeint_adjoint, odeint
 
-from lib.utils import *
+from lib.utils.seq_helper import *
 
 EPS = 1e-3
 device = 'cpu'
@@ -44,10 +44,6 @@ class temprnn(nn.Module):
         self.dense2 = nn.Linear(2 * nhidden, 2 * nhidden)
         self.dense3 = nn.Linear(2 * nhidden, 2 * out_channels)
 
-        # torch.nn.init.uniform(self.dense1.weight, -EPS, EPS)
-        # torch.nn.init.uniform(self.dense2.weight, -EPS, EPS)
-        # torch.nn.init.uniform(self.dense3.weight, -EPS, EPS)
-
         self.cont = cont
         self.res = res
     def forward(self, h, x):
@@ -67,10 +63,6 @@ class nodernn(nn.Module):
         self.dense1 = nn.Linear(in_channels + nhidden, nhidden * 2)
         self.dense2 = nn.Linear(nhidden * 2, nhidden * 2)
         self.dense3 = nn.Linear(nhidden * 2, out_channels)
-
-        # torch.nn.init.uniform(self.dense1.weight, -EPS, EPS)
-        # torch.nn.init.uniform(self.dense2.weight, -EPS, EPS)
-        # torch.nn.init.uniform(self.dense3.weight, -EPS, EPS)
 
     def forward(self, h, x):
         out = torch.cat([h, x], dim=1).to(device)

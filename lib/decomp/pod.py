@@ -136,4 +136,15 @@ def pod_mode_to_true(dataset,modes,args):
         true = np.array([true_x.T,true_y.T])
     elif args.dataset == 'KPP':
         true=true.reshape(dataset.shape).T
+
+    elif args.dataset == 'EE':
+        params = args.eeParam
+        domain_len = dataset.domain_len
+        shape=[true.shape[0]]+[domain_len//params,params]
+
+        pod_rho = true[:,:domain_len].reshape(shape,order='F')
+        pod_v = true[:,domain_len:2*domain_len].reshape(shape,order='F')
+        pod_e = true[:,2*domain_len:].reshape(shape,order='F')
+
+        true = np.array([pod_rho.T,pod_v.T,pod_e.T])
     return true.T

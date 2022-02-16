@@ -60,9 +60,9 @@ def ee_animate(data,args):
         lines = lines + ax.plot(x,np.zeros(data.shape[1]), 'k')
 
     def run_ee_lines(ee_t):
-        lines[0].set_ydata(data[ee_t,:,0])
-        lines[1].set_ydata(data[ee_t,:,1])
-        lines[2].set_ydata(data[ee_t,:,2])
+        lines[0].set_ydata(data[ee_t,:,0,0])
+        lines[1].set_ydata(data[ee_t,:,0,1])
+        lines[2].set_ydata(data[ee_t,:,0,2])
         return lines
 
     ani = animation.FuncAnimation(fig, run_ee_lines, blit=False, interval=data.shape[0]-1,
