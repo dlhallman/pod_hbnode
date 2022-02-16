@@ -73,6 +73,8 @@ if args.verbose:
     for arg in vars(args):
         print('\t',arg, getattr(args, arg))
 
+args.eeParam=None
+
 """INITIALIZE"""
 set_seed(args.seed)
 set_outdir(args.out_dir, args)

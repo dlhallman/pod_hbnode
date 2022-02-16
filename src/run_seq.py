@@ -132,7 +132,7 @@ for epoch in epochs:
         loss_meter_t.update(loss.item())
         rec['tr_loss'] = loss
         rec['forward_nfe'] = model.cell.nfe
-        rec['forward stiff'] = model.cell.stiff
+        rec['forward_stiff'] = model.cell.stiff
         epochs.set_description('loss:{:.3f}'.format(loss))
 
         #BACKPROP

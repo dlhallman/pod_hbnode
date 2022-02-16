@@ -20,8 +20,12 @@ def ax_nfe(epochs,nfes,plt_args):
   plt.scatter(epochs,nfes,**plt_args)
   return 1
 
-def ax_loss(loss,plt_args):
-  plt.plot(loss,**plt_args)
+def ax_stiff(epochs,stiff,plt_args):
+  plt.scatter(epochs,stiff,**plt_args)
+  return 1
+
+def ax_loss(epochs,loss,plt_args):
+  plt.plot(epochs,loss,**plt_args)
   return 1
 
 
@@ -38,20 +42,22 @@ def plot_loss(fname,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
-    plt.rc('xtick',labelsize=18)
-    plt.rc('ytick',labelsize=18)
+    plt.rc('xtick',labelsize=24)
+    plt.rc('ytick',labelsize=24)
 
     with open(fname, 'r') as f:
         df = pd.read_csv(f, index_col=False)
     index_ = ['tr_loss', 'val_loss']
     color = ['k','r--']
     losses = df[index_].values
+    epochs=np.arange(len(losses))
     plt.figure(tight_layout=True)
     for i,loss in enumerate(losses.T):
         plt.plot(loss,color[i],label=index_[i])
     plt.legend()
-    plt.yticks(np.logspace(-5,0,6))
-    plt.ylim(1e-5,1)
+    plt.yticks(np.logspace(-4,0,5))
+    plt.ylim(1e-4,1)
+    plt.xlim(epochs[0],epochs[-1])
     plt.yscale('log')
     end_str = str(args.out_dir+'/'+args.model+'_loss')
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
@@ -64,8 +70,8 @@ def plot_nfe(fname,index_,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
-    plt.rc('xtick',labelsize=18)
-    plt.rc('ytick',labelsize=18)
+    plt.rc('xtick',labelsize=24)
+    plt.rc('ytick',labelsize=24)
 
     with open(fname, 'r') as f:
         df = pd.read_csv(f, index_col=False)
@@ -74,6 +80,7 @@ def plot_nfe(fname,index_,args):
     epochs=np.arange(len(nfes))
     plt.figure(tight_layout=True)
     plt.scatter(epochs,nfes)
+    plt.xlim(epochs[0],epochs[-1])
     end_str = str(args.out_dir+'/'+args.model+'_'+index_)
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
@@ -85,14 +92,14 @@ def plot_adjGrad(fname,args,show=False):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
-    plt.rc('xtick',labelsize=18)
-    plt.rc('ytick',labelsize=18)
+    plt.rc('xtick',labelsize=24)
+    plt.rc('ytick',labelsize=24)
     with open(fname, 'r') as f:
         df = pd.read_csv(f, index_col=False)
     index_ = ['grad_{}'.format(i) for i in range(args.seq_ind)]
     grad = df[index_].values
     plt.figure(tight_layout = True)
-    plt.imshow(grad.T, origin='upper', vmin=0, vmax = .05, cmap='inferno', aspect='auto')
+    plt.imshow(grad.T, origin='upper',vmin=0,vmax=.01, cmap='inferno', aspect='auto')
     plt.colorbar()
     plt.xlabel('Epoch')
     plt.ylabel('$T-t$')
@@ -107,13 +114,12 @@ def plot_stiff(fname,args, clip=1, show=False):
     with open(fname, 'r') as f:
         df = pd.read_csv(f, index_col=False)
     index_ = ['backward_stiff']
-    color = ['k','r--']
-    losses = df[index_].values
+    stiff = df[index_].values
+    epochs = np.arange(len(stiff))
     plt.figure(tight_layout=True)
-    for i,loss in enumerate(losses.T):
-        plt.plot(loss,color[i],label=index_[i])
-    plt.legend()
+    plt.scatter(epochs,stiff)
     plt.yscale('log')
+    plt.xlim(0,epochs[-1])
 
     end_str = str(args.out_dir+'/'+args.model+'_stiffness')
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
@@ -129,8 +135,8 @@ def compare_nfe(file_list,model_list,index_,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
-    plt.rc('xtick',labelsize=18)
-    plt.rc('ytick',labelsize=18)
+    plt.rc('xtick',labelsize=24)
+    plt.rc('ytick',labelsize=24)
 
     fig = plt.figure(tight_layout=True)
     ax=fig.axes
@@ -138,23 +144,49 @@ def compare_nfe(file_list,model_list,index_,args):
         with open(fname, 'r') as f:
             df = pd.read_csv(f, index_col=False)
         nfes = df[index_].values[::args.epoch_freq]
-        epochs=np.arange(len(nfes))
+        epochs=np.arange(len(nfes))*args.epoch_freq
         plt_args={'label':model_list[i],'color':args.color_list[i]}
         ax_nfe(epochs,nfes,plt_args)
 
+    plt.xlim(epochs[0],epochs[-1])
     plt.legend()
     end_str = str(args.out_dir+'/compare_'+index_)
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
 
+def compare_stiff(file_list,model_list,index_,args):
+    plt.style.use('classic')
+    plt.rcParams['font.family']='Times New Roman'
+    plt.rcParams['xtick.minor.size']=0
+    plt.rcParams['ytick.minor.size']=0
+    plt.rc('xtick',labelsize=24)
+    plt.rc('ytick',labelsize=24)
+
+    fig = plt.figure(tight_layout=True)
+    ax=fig.axes
+    for i,fname in enumerate(file_list):
+        with open(fname, 'r') as f:
+            df = pd.read_csv(f, index_col=False)
+        stiffs = df[index_].values[::args.epoch_freq]
+        epochs=np.arange(len(stiffs))*args.epoch_freq
+        plt_args={'label':model_list[i],'color':args.color_list[i]}
+        ax_stiff(epochs,stiffs,plt_args)
+
+    plt.legend() 
+    plt.ylim(1,1e4)
+    plt.yscale('log')
+    plt.xlim(epochs[0],epochs[-1])
+    end_str = str(args.out_dir+'/compare_'+index_)
+    plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
+    if args.verbose: plt.show()
 
 def compare_loss(file_list,model_list,index_,args):
     plt.style.use('classic')
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
-    plt.rc('xtick',labelsize=18)
-    plt.rc('ytick',labelsize=18)
+    plt.rc('xtick',labelsize=24)
+    plt.rc('ytick',labelsize=24)
 
     fig = plt.figure(tight_layout=True)
     ax=fig.axes
@@ -163,10 +195,18 @@ def compare_loss(file_list,model_list,index_,args):
             df = pd.read_csv(f, index_col=False)
         losses = df[index_].values
         plt_args={'label':model_list[i],'color':args.color_list[i]}
-        ax_loss(losses[::args.epoch_freq],plt_args)
+        epochs=np.arange(len(losses[::args.epoch_freq]))*args.epoch_freq
+        ax_loss(epochs,losses[::args.epoch_freq],plt_args)
 
-    plt.yticks(np.logspace(-5,0,6))
-    plt.ylim(1e-5,1)
+    if index_=='tr_loss':
+        plt.yticks(np.logspace(-4,0,5))
+        plt.ylim(1e-4,1)
+    else:
+        plt.yticks(np.logspace(-3,0,4))
+        plt.ylim(1e-3,1)
+    epochs=np.arange(len(losses[::args.epoch_freq]))*args.epoch_freq
+    print(epochs)
+    plt.xlim(0,epochs[-1])
     plt.yscale('log')
     plt.legend()
     end_str = str(args.out_dir+'/compare_'+index_)

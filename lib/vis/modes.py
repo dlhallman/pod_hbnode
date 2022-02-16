@@ -8,8 +8,8 @@ def eig_decay(dataset,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
-    plt.rc('xtick',labelsize=18)
-    plt.rc('ytick',labelsize=18)
+    plt.rc('xtick',labelsize=24)
+    plt.rc('ytick',labelsize=24)
 
     total = dataset.lv.sum()
     decay=[1]
@@ -42,15 +42,16 @@ def plot_mode(modes,times,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
-    plt.rc('xtick',labelsize=10)
-    plt.rc('ytick',labelsize=10)
+    plt.rc('xtick',labelsize=18)
+    plt.rc('ytick',labelsize=18)
     plt.figure(tight_layout=True)
     for i,node in enumerate(modes.T):
         plt.subplot(2,2,i+1)
         plt.plot(times,node,'k')
-        plt.xlabel("Time $(t)$",fontsize=48)
-        plt.ylabel("$\\alpha_{}$".format(i),fontsize=48)
+        plt.xlabel("Time $(t)$",fontsize=36)
+        plt.ylabel("$\\alpha_{}$".format(i),fontsize=36)
     #OUTPUT
+    plt.xlim(times[0],times[-1])
     end_str = str(args.dataset+'_'+args.model+'_modes').lower()
     plt.savefig(args.out_dir+'/'+end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
@@ -62,19 +63,19 @@ def mode_prediction(predictions,true,times,verts,args):
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
     plt.rcParams['ytick.minor.size']=0
-    plt.rc('xtick',labelsize=14)
-    plt.rc('ytick',labelsize=14)
+    plt.rc('xtick',labelsize=18)
+    plt.rc('ytick',labelsize=18)
     plt.figure(tight_layout=True)
     if len(times)!=len(predictions):
         times = np.arange(len(predictions))
     for i,node in enumerate(predictions.T):
-        plt.subplot(args.modes//2,2,i+1)
+        plt.subplot(2,2,i+1)
         plt.plot(times,true.T[i], 'k', label='True')
         plt.plot(times,node, 'r', dashes=[1,1], label='Prediction')
         min_,max_=np.min(true.T[i]),np.max(true.T[i])
         plt.vlines(verts,ymin=min_+.2*min_,ymax=max_+.2*max_)
-        plt.xlabel("Time $(t)$",fontsize=48)
-        plt.ylabel("$\\alpha_{}$".format(i),fontsize=48)
+        plt.xlabel("Time $(t)$",fontsize=36)
+        plt.ylabel("$\\alpha_{}$".format(i),fontsize=36)
         plt.ylim(bottom=min_+.2*min_,top=max_+.2*max_)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper center',mode='expand', borderaxespad=0., prop={'size': 10}, frameon=False)
     #OUTPUT

@@ -20,7 +20,7 @@ data_parser.add_argument('--model_list', type=str, required=True,
                     nargs='+',help='List of models in the same order as the file list.',
                     choices=['vae_node','vae_hbnode','seq_node', 'seq_hbnode'])
 data_parser.add_argument('--comparisons', type=str, required=True,
-                    nargs='+',choices=['forward_nfe','backward_nfe','tr_loss','val_loss'])
+                    nargs='+',choices=['forward_nfe','backward_nfe','tr_loss','val_loss','forward_stiff','backward_stiff'])
 data_parser.add_argument('--color_list', type=str, default=['k','r','tab:cyan','tab:green'],
                     nargs='+',choices=['forward_nfe','backward_nfe','tr_loss','val_loss'])
 data_parser.add_argument('--epoch_freq', type=int, default=1,
@@ -37,3 +37,7 @@ if 'tr_loss' in args.comparisons:
     compare_loss(args.file_list,args.model_list,'tr_loss',args)   
 if 'val_loss' in args.comparisons:
     compare_loss(args.file_list,args.model_list,'val_loss',args)   
+if 'forward_stiff' in args.comparisons:
+    compare_stiff(args.file_list,args.model_list,'forward_stiff',args)   
+if 'backward_stiff' in args.comparisons:
+    compare_stiff(args.file_list,args.model_list,'backward_stiff',args)   

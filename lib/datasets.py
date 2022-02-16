@@ -103,6 +103,7 @@ class DMD_DATASET(Dataset):
           var1_xk = np.real(self.data_recon[:,:self.domain_len].reshape(end_shape))
           var2_xk = np.real(self.data_recon[:,self.domain_len:].reshape(end_shape))
           self.data_recon = np.moveaxis(np.array((var1_xk,var2_xk)),0,-1)
+          print(self.data_recon.shape)
       elif args.dataset == 'EE':
           var1_xk = np.real(self.data_recon[:,:self.domain_len].reshape(end_shape))
           var2_xk = np.real(self.data_recon[:,self.domain_len:2*self.domain_len].reshape(end_shape))
@@ -191,6 +192,7 @@ class POD_DATASET(Dataset):
 
     def reconstruct(self):
       self.data_recon = pod_mode_to_true(self,self.data,self.args)
+      print(self.data_recon.shape)
 
     def save_data(self,file_str):
         args=self.args

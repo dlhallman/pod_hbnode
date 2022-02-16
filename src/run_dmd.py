@@ -79,5 +79,5 @@ dmd.reconstruct()
 """OUTPUT"""
 if args.verbose: print("Generating Output ...\n",Xk.shape)
 eig_decay(dmd,args)
-data_reconstruct(dmd.data_recon.copy(),args.tpred-1,args)
+data_reconstruct(dmd.data_recon,args.tpred-1,args)
 data_animation(dmd.data_recon,args)

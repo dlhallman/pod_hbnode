@@ -8,13 +8,14 @@ $1 src/run_pod.py \
     --out_dir ./out/nonT_pred/ \
     --modes 8 \
     --tstart 100 \
-   --tstop 400 \
+    --tstop 400 \
     --tpred 100
 
 $1 src/run_dmd.py \
     --dataset VKS \
     --data_dir ./data/VKS.pkl \
     --out_dir ./out/nonT_pred/ \
+	--lifts sin cos quad cube \
     --modes 24 \
     --tstart 100 \
     --tstop 180 \
@@ -34,7 +35,7 @@ $1 src/run_vae.py \
 
 $1 src/run_vae.py \
     --dataset VKS \
-   --data_dir ./data/VKS.pkl \
+    --data_dir ./data/VKS.pkl \
     --load_file ./out/nonT_pred/pth/vks_100_400_pod_8.npz \
     --out_dir ./out/nonT_pred/ \
     --tr_ind 75 \
@@ -50,7 +51,7 @@ $1 src/compare.py \
    --file_list ./out/nonT_pred/pth/HBNODE.csv ./out/nonT_pred/pth/NODE.csv \
    --model_list vae_hbnode vae_node \
    --comparisons forward_nfe backward_nfe tr_loss val_loss \
-   --epoch_freq 100
+   --epoch_freq 20
 
 
 echo "BASH TASK(S) COMPLETED."
