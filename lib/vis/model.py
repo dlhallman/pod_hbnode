@@ -101,8 +101,8 @@ def plot_adjGrad(fname,args,show=False):
     plt.figure(tight_layout = True)
     plt.imshow(grad.T, origin='upper',vmin=0,vmax=.01, cmap='inferno', aspect='auto')
     plt.colorbar()
-    plt.xlabel('Epoch')
-    plt.ylabel('$T-t$')
+    plt.xlabel('Epoch',fontsize=24)
+    plt.ylabel('$T-t$',fontsize=24)
     
     end_str = str(args.out_dir+'/'+args.model+'_adjGrad')
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
@@ -149,7 +149,7 @@ def compare_nfe(file_list,model_list,index_,args):
         ax_nfe(epochs,nfes,plt_args)
 
     plt.xlim(epochs[0],epochs[-1])
-    plt.legend()
+    plt.legend(fontsize=24)
     end_str = str(args.out_dir+'/compare_'+index_)
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
@@ -172,7 +172,7 @@ def compare_stiff(file_list,model_list,index_,args):
         plt_args={'label':model_list[i],'color':args.color_list[i]}
         ax_stiff(epochs,stiffs,plt_args)
 
-    plt.legend() 
+    plt.legend(fontsize=24) 
     plt.ylim(1,1e4)
     plt.yscale('log')
     plt.xlim(epochs[0],epochs[-1])
@@ -205,10 +205,9 @@ def compare_loss(file_list,model_list,index_,args):
         plt.yticks(np.logspace(-3,0,4))
         plt.ylim(1e-3,1)
     epochs=np.arange(len(losses[::args.epoch_freq]))*args.epoch_freq
-    print(epochs)
     plt.xlim(0,epochs[-1])
     plt.yscale('log')
-    plt.legend()
+    plt.legend(fontsize=24)
     end_str = str(args.out_dir+'/compare_'+index_)
     plt.savefig(end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()

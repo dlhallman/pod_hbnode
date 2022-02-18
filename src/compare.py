@@ -18,7 +18,7 @@ data_parser.add_argument('--file_list', type=str, required=True,
                     nargs='+',help='Input files sep by white space.')
 data_parser.add_argument('--model_list', type=str, required=True,
                     nargs='+',help='List of models in the same order as the file list.',
-                    choices=['vae_node','vae_hbnode','seq_node', 'seq_hbnode'])
+                    choices=['NODE','HBNODE'])
 data_parser.add_argument('--comparisons', type=str, required=True,
                     nargs='+',choices=['forward_nfe','backward_nfe','tr_loss','val_loss','forward_stiff','backward_stiff'])
 data_parser.add_argument('--color_list', type=str, default=['k','r','tab:cyan','tab:green'],

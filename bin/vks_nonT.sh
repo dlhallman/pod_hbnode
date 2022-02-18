@@ -49,7 +49,7 @@ echo "COMPARISON PLOTS"
 $1 src/compare.py \
    --out_dir ./out/nonT_pred/ \
    --file_list ./out/nonT_pred/pth/HBNODE.csv ./out/nonT_pred/pth/NODE.csv \
-   --model_list vae_hbnode vae_node \
+   --model_list HBNODE NODE \
    --comparisons forward_nfe backward_nfe tr_loss val_loss \
    --epoch_freq 20
 

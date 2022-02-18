@@ -23,17 +23,15 @@ $1 src/run_param.py \
     --model NODE \
     --epochs 500
 
-#$1 src/run_seq.py \
-#    --dataset EE \
-#    --data_dir ./data/EulerEqs.npz \
-#    --load_file ./out/ee/pth/ee_0_181_pod_8.npz \
-#    --out_dir ./out/ee/ \
-#    --tr_ind 100 \
-#    --val_ind 140 \
-#    --eval_ind 180 \
-#    --batch_size 100 \
-#    --eeParam 80 \
-#    --model HBNODE 
+$1 src/run_param.py \
+    --dataset EE \
+    --data_dir ./data/EulerEqs.npz \
+    --load_file ./out/ee/pth/ee_0_181_pod_8.npz \
+    --out_dir ./out/ee/ \
+    --tr_ind 100 \
+    --param_ind 80 \
+    --model HBNODE \
+	--epocsh 500
 
 #echo "COMPARISON PLOTS"
 #$1 src/compare.py \

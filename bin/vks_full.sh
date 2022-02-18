@@ -50,7 +50,7 @@ echo "COMPARISON PLOTS"
 $1 src/compare.py \
    --out_dir ./out/full/ \
    --file_list ./out/full/pth/HBNODE.csv ./out/full/pth/NODE.csv \
-   --model_list seq_hbnode seq_node \
+   --model_list HBNODE NODE \
    --comparisons forward_nfe backward_nfe tr_loss val_loss forward_stiff backward_stiff \
    --epoch_freq 5
 
