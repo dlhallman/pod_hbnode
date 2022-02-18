@@ -3,9 +3,11 @@ import numpy as np
 import pandas as pd
 import pickle
 import torch
+import torch.nn as nn
 from torch.utils.data import Dataset
 from lib.decomp.dmd import *
 from lib.decomp.pod import *
+from lib.vis.modes import plot_mode
 
 """STANDARD DATA RETRIEVAL
     - Format dimensions as [t,[omega],k] e.g. [t,[xx,yy,zz],k]
@@ -341,46 +343,50 @@ class PARAM_DATASET:
         self.shape = self.data_init.shape[1:]
         self.time_len = self.shape[1]
 
-
-
-
         args.tstop = min(args.tstop, self.data.shape[1]+args.tstart-1)
         
+        self.reduce()
+
+        data = np.moveaxis(self.data,0,1)
+        self.mean_data = data.mean(axis=0)
+        self.std_data = data.std(axis=0)
+        data = (data - self.mean_data) / self.std_data
+        self.data = np.moveaxis(data,1,0) 
+
         #SEQUENCE DATA
-        train_size = int(0.8 * self.num_params)
+        train_size = args.param_ind
         self.data_shuffled = self.data.copy()
         np.random.shuffle(self.data_shuffled)
         train =self.data_shuffled[:train_size]
         valid =self.data_shuffled[train_size:]
 
-        self.data = np.moveaxis(self.data,[0,-1],[-1,1])
-        self.data = self.data.reshape(self.data.shape[:2]+(-1,1) ,order='F')[:,:,:,0]
-        train = np.moveaxis(train,[0,-1],[-1,1])
-        train = train.reshape(train.shape[:2]+(-1,1) ,order='F')[:,:,:,0]
-        valid = np.moveaxis(valid,[0,-1],[-1,1])
-        valid = valid.reshape(valid.shape[:2]+(-1,1) ,order='F')[:,:,:,0]
+        train = np.moveaxis(train,0,1)
+        train_data = train[:args.tr_ind]
+        train_label = train[args.tr_ind:]
+        valid = np.moveaxis(valid,0,1)
+        valid_data = valid[:args.tr_ind]
+        valid_label = valid[args.tr_ind:]
 
-        self.data = np.moveaxis(self.data,1,-1)
-        self.train = np.moveaxis(train,1,-1)
-        self.valid = np.moveaxis(valid,1,-1)
+        train_data = torch.FloatTensor(train_data)
+        train_label = torch.FloatTensor(train_label)
+        valid_data = torch.FloatTensor(valid_data)
+        valid_label = torch.FloatTensor(valid_label)
 
-        self.reduce()
+        padd = max(args.tstop-args.tr_ind,args.tr_ind)
+        data_pad = padd-args.tr_ind
+        label_pad = padd+args.tr_ind-args.tstop
+        self.data_pad = data_pad
+        self.label_pad = label_pad
 
-        total_size = self.data.shape[0] - args.seq_ind
+        train_data = nn.functional.pad(train_data,(0,0,0,0,0,data_pad))
+        train_label = nn.functional.pad(train_label,(0,0,0,0,0,label_pad))
+        valid_data = nn.functional.pad(valid_data,(0,0,0,0,0,data_pad))
+        valid_label = nn.functional.pad(valid_label,(0,0,0,0,0,label_pad))
 
-        #SEQUENCE DATA
-        train_data = np.vstack([[self.train_data[t:t + args.seq_ind, :] for t in range(total_size)]]).swapaxes(0,1)
-        train_label = np.vstack([[self.train_data[t+1:t+args.seq_ind+1, :] for t in range(total_size)]]).swapaxes(0,1)
-        self.mean_data = train_data.reshape((-1, train_data.shape[2])).mean(axis=0)
-        self.std_data = train_data.reshape((-1, train_data.shape[2])).std(axis=0)
-        self.train_data = torch.FloatTensor((train_data - self.mean_data) / self.std_data)
-
+        self.train_data = torch.FloatTensor(train_data).to(args.device)
         self.train_label = torch.FloatTensor(train_label).to(args.device)
-        self.train_label = torch.FloatTensor((train_label - self.mean_data) / self.std_data)
         self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(args.device)
 
-        valid_data = np.vstack([[self.valid_data[t:t + args.seq_ind, :] for t in range(total_size)]]).swapaxes(0,1)
-        valid_label = np.vstack([[self.valid_data[t+1:t+args.seq_ind+1, :] for t in range(total_size)]]).swapaxes(0,1)
         self.valid_data =  torch.FloatTensor(valid_data).to(args.device)
         self.valid_label = torch.FloatTensor(valid_label).to(args.device)
         self.valid_times = (torch.ones(valid_data.shape[:-1])/valid_data.shape[1]).to(args.device)
@@ -389,10 +395,27 @@ class PARAM_DATASET:
     """POD Model Reduction"""
     def reduce(self):
         args = self.args
-        print('Reducing ... \t Modes: {}'.format(args.modes))
-        self.spatial_modes, self.data, self.lv, self.rho_flux, self.v_flux, self.e_flux = POD3(self.data, args.tstart, args.tstop, args.modes)
-        _, self.train_data, _, _, _, _ = POD3(self.train, args.tstart, args.tstop, args.modes)
-        _, self.valid_data, _, _, _, _ = POD3(self.valid, args.tstart, args.tstop, args.modes)
-
+        Spatial_modes=[]
+        Data=[]
+        Lv=[]
+        Rho_flux=[]
+        V_flux=[]
+        E_flux=[]
+        for i,dat in enumerate(self.data):
+            spatial_modes,temp,lv, rho_flux, v_flux, e_flux = POD3(dat, args.tstart, args.tstop, args.modes)
+            Spatial_modes=Spatial_modes+[spatial_modes]
+            Data=Data+[temp]
+            Lv=Lv+[lv]
+            Rho_flux=Rho_flux+[rho_flux]
+            V_flux=V_flux+[v_flux]
+            E_flux=E_flux+[e_flux]
+            if i==self.args.param_ind+1:
+                  plot_mode(temp,np.arange(args.tstop-args.tstart),self.args) 
+        self.spatial_modes = np.array(Spatial_modes)
+        self.data = np.array(Data)
+        self.lv = np.array(Lv)
+        self.rho_flux = np.array(Rho_flux)
+        self.v_flux = np.array(V_flux)
+        self.e_flux = np.array(E_flux)
     def reconstruct(self):
       self.data_recon = pod_mode_to_true(self,self.data,self.args)

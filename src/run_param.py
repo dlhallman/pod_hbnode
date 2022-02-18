@@ -16,6 +16,7 @@ from lib.datasets import *
 from lib.models.param import *
 from lib.utils.misc import *
 from lib.vis.model import *
+from lib.vis.modes import *
 
 parser = argparse.ArgumentParser(prefix_chars='-+/',
                   description='[PARAMTERIZED] PARAMETERIZED parameters.')
@@ -35,7 +36,9 @@ data_parser.add_argument('--tstop', type=int, default=181,
 data_parser.add_argument('--batch_size', type=int, default=80,
               help='Time index for validation data.' )
 data_parser.add_argument('--tr_ind', type=int, default=100,
-              help='Time index for validation data.' )
+              help='Time index for data and label separation.' )
+data_parser.add_argument('--param_ind', type=int, default=80,
+              help='Param index for validation data.' )
 data_parser.add_argument('--seq_ind', type=int, default=100,
               help='Time index for validation data.' )
 model_params = parser.add_argument_group('Model Parameters')
@@ -155,15 +158,18 @@ print("Generating Output ... ")
 rec_file = args.out_dir+ './pth/'+args.model+'.csv'
 rec.writecsv(rec_file)
 args.model = str('param_'+args.model).lower()
-tr_pred= model(param.train_times, param.train_data).cpu().detach().numpy()[-1]
-val_pred = model(param.valid_times, param.valid_data).cpu().detach().numpy()[-1]
-predictions=np.vstack((tr_pred,val_pred))
-normalized = (predictions*param.std_data+param.mean_data)
-print(normalized.shape)
+tr_pred= model(param.train_times, param.train_data).cpu().detach()
+val_pred = model(param.valid_times, param.valid_data).cpu().detach().numpy()
+trained = np.vstack((param.train_data[:param.train_data.shape[0]-param.data_pad],tr_pred[:tr_pred.shape[0]-param.label_pad]))
+validated = np.vstack((param.valid_data[:param.valid_data.shape[0]-param.data_pad],val_pred[:val_pred.shape[0]-param.label_pad]))
+validated_true = np.vstack((param.valid_data[:param.valid_data.shape[0]-param.data_pad],param.valid_label[:param.valid_label.shape[0]-param.label_pad]))
+trained_true = np.vstack((param.train_data[:param.train_data.shape[0]-param.data_pad],param.train_label[:param.train_label.shape[0]-param.label_pad]))
 times = np.arange(args.tstart+args.seq_ind,args.tstop)
 #DATA PLOTS
-#verts = [args.tstart+args.tr_ind]
-#mode_prediction(normalized[:,:4],param.param[-1,:args.val_ind],times,verts,args)
+verts = [args.tstart+args.tr_ind]
+true = np.moveaxis(param.data.copy(),0,1)
+mode_prediction(validated[:,0,:4],validated_true[:,0,:4],times,verts,args,'_val')
+mode_prediction(trained[:,0,:4],trained_true[:,0,:4],times,verts,args)
 #val_recon = pod_mode_to_true(param.pod_dataset,normalized,args)
 #data_reconstruct(val_recon,-1,args)
 #data_animation(val_recon,args)

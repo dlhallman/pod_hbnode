@@ -58,7 +58,7 @@ def plot_mode(modes,times,args):
 
     return 1
 
-def mode_prediction(predictions,true,times,verts,args):
+def mode_prediction(predictions,true,times,verts,args,end_str=''):
     plt.style.use('classic')
     plt.rcParams['font.family']='Times New Roman'
     plt.rcParams['xtick.minor.size']=0
@@ -72,14 +72,16 @@ def mode_prediction(predictions,true,times,verts,args):
         plt.subplot(2,2,i+1)
         plt.plot(times,true.T[i], 'k', label='True')
         plt.plot(times,node, 'r', dashes=[1,1], label='Prediction')
-        min_,max_=np.min(true.T[i]),np.max(true.T[i])
+        min_1,max_1=np.min(true.T[i]),np.max(true.T[i])
+        min_2,max_2=np.min(node),np.max(node)
+        min_,max_=min(min_1,min_2),max(max_1,max_2)
         plt.vlines(verts,ymin=min_+.2*min_,ymax=max_+.2*max_)
         plt.xlabel("Time $(t)$",fontsize=36)
         plt.ylabel("$\\alpha_{}$".format(i),fontsize=36)
         plt.ylim(bottom=min_+.2*min_,top=max_+.2*max_)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper center',mode='expand', borderaxespad=0., prop={'size': 10}, frameon=False)
     #OUTPUT
-    end_str = str(args.dataset+'_'+args.model+'_mode_pred').lower()
+    end_str = str(args.dataset+'_'+args.model+'_mode_pred'+end_str).lower()
     plt.savefig(args.out_dir+'/'+end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()
 
