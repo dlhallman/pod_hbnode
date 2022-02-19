@@ -22,7 +22,7 @@ def eig_decay(dataset,args):
     x = np.arange(0,len(decay))
 
     plt.figure(tight_layout=True)
-    plt.plot(x,decay, 'k')
+    plt.plot(x,decay, 'k',linewidth=2)
     plt.xlabel('Number of Modes $(N)$',fontsize=36)
     plt.ylabel('$1-I(N)$',fontsize=36)
     plt.yscale('log')
@@ -50,8 +50,8 @@ def plot_mode(modes,times,args):
         plt.plot(times,node,'k')
         plt.xlabel("Time $(t)$",fontsize=24)
         plt.ylabel("$\\alpha_{}$".format(i),fontsize=24)
+        plt.xlim(times[0],times[-1])
     #OUTPUT
-    plt.xlim(times[0],times[-1])
     end_str = str(args.dataset+'_'+args.model+'_modes').lower()
     plt.savefig(args.out_dir+'/'+end_str+'.pdf', format="pdf", bbox_inches="tight")
     if args.verbose: plt.show()

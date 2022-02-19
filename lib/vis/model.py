@@ -25,7 +25,7 @@ def ax_stiff(epochs,stiff,plt_args):
   return 1
 
 def ax_loss(epochs,loss,plt_args):
-  plt.plot(epochs,loss,**plt_args)
+  plt.plot(epochs,loss,**plt_args,linewidth=2)
   return 1
 
 
@@ -161,6 +161,7 @@ def compare_stiff(file_list,model_list,index_,args):
     plt.rcParams['ytick.minor.size']=0
     plt.rc('xtick',labelsize=24)
     plt.rc('ytick',labelsize=24)
+    markerlist = ['o','o']
 
     fig = plt.figure(tight_layout=True)
     ax=fig.axes
@@ -169,11 +170,11 @@ def compare_stiff(file_list,model_list,index_,args):
             df = pd.read_csv(f, index_col=False)
         stiffs = df[index_].values[::args.epoch_freq]
         epochs=np.arange(len(stiffs))*args.epoch_freq
-        plt_args={'label':model_list[i],'color':args.color_list[i]}
+        plt_args={'label':model_list[i],'color':args.color_list[i],'marker':markerlist[i]}
         ax_stiff(epochs,stiffs,plt_args)
 
     plt.legend(fontsize=24) 
-    plt.ylim(1,1e4)
+    plt.ylim(2e1,1e4)
     plt.yscale('log')
     plt.xlim(epochs[0],epochs[-1])
     end_str = str(args.out_dir+'/compare_'+index_)
@@ -202,8 +203,8 @@ def compare_loss(file_list,model_list,index_,args):
         plt.yticks(np.logspace(-4,0,5))
         plt.ylim(1e-4,1)
     else:
-        plt.yticks(np.logspace(-3,0,4))
-        plt.ylim(1e-3,1)
+        plt.yticks(np.logspace(-2,0,3))
+        plt.ylim(.4e-1,1)
     epochs=np.arange(len(losses[::args.epoch_freq]))*args.epoch_freq
     plt.xlim(0,epochs[-1])
     plt.yscale('log')
