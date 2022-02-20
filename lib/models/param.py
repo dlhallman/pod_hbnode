@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from einops import rearrange
 from torch import nn
-from torchdiffeq import odeint_adjoint, odeint
+from torchdiffeq import odeint_adjoint as odeint
 
 from lib.utils.seq_helper import *
 
