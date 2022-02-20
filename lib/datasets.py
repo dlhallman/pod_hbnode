@@ -105,7 +105,6 @@ class DMD_DATASET(Dataset):
           var1_xk = np.real(self.data_recon[:,:self.domain_len].reshape(end_shape))
           var2_xk = np.real(self.data_recon[:,self.domain_len:].reshape(end_shape))
           self.data_recon = np.moveaxis(np.array((var1_xk,var2_xk)),0,-1)
-          print(self.data_recon.shape)
       elif args.dataset == 'EE':
           var1_xk = np.real(self.data_recon[:,:self.domain_len].reshape(end_shape))
           var2_xk = np.real(self.data_recon[:,self.domain_len:2*self.domain_len].reshape(end_shape))
@@ -194,7 +193,6 @@ class POD_DATASET(Dataset):
 
     def reconstruct(self):
       self.data_recon = pod_mode_to_true(self,self.data,self.args)
-      print(self.data_recon.shape)
 
     def save_data(self,file_str):
         args=self.args
@@ -348,8 +346,8 @@ class PARAM_DATASET:
         self.reduce()
 
         data = np.moveaxis(self.data,0,1)
-        self.mean_data = data.mean(axis=0)
-        self.std_data = data.std(axis=0)
+        self.mean_data = data.mean(axis=(0,1))
+        self.std_data = data.std(axis=(0,1))
         data = (data - self.mean_data) / self.std_data
         self.data = np.moveaxis(data,1,0) 
 
@@ -359,22 +357,21 @@ class PARAM_DATASET:
         np.random.shuffle(self.data_shuffled)
         train =self.data_shuffled[:train_size]
         valid =self.data_shuffled[train_size:]
-
         train = np.moveaxis(train,0,1)
         train_data = train[:args.tr_ind]
-        train_label = train[args.tr_ind:]
+        train_label = train[args.tr_ind-1:]
         valid = np.moveaxis(valid,0,1)
         valid_data = valid[:args.tr_ind]
-        valid_label = valid[args.tr_ind:]
+        valid_label = valid[args.tr_ind-1:]
 
         train_data = torch.FloatTensor(train_data)
         train_label = torch.FloatTensor(train_label)
         valid_data = torch.FloatTensor(valid_data)
         valid_label = torch.FloatTensor(valid_label)
 
-        padd = max(args.tstop-args.tr_ind,args.tr_ind)
-        data_pad = padd-args.tr_ind
-        label_pad = padd+args.tr_ind-args.tstop
+        padd = max(train_data.shape[0],train_label.shape[0])
+        data_pad = padd-train_data.shape[0]
+        label_pad = padd-train_label.shape[0]
         self.data_pad = data_pad
         self.label_pad = label_pad
 
@@ -382,15 +379,15 @@ class PARAM_DATASET:
         train_label = nn.functional.pad(train_label,(0,0,0,0,0,label_pad))
         valid_data = nn.functional.pad(valid_data,(0,0,0,0,0,data_pad))
         valid_label = nn.functional.pad(valid_label,(0,0,0,0,0,label_pad))
+        
 
         self.train_data = torch.FloatTensor(train_data).to(args.device)
         self.train_label = torch.FloatTensor(train_label).to(args.device)
-        self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[1]).to(args.device)
+        self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[0]).to(args.device)
 
         self.valid_data =  torch.FloatTensor(valid_data).to(args.device)
         self.valid_label = torch.FloatTensor(valid_label).to(args.device)
-        self.valid_times = (torch.ones(valid_data.shape[:-1])/valid_data.shape[1]).to(args.device)
-
+        self.valid_times = (torch.ones(valid_data.shape[:-1])/valid_data.shape[0]).to(args.device)
 
     """POD Model Reduction"""
     def reduce(self):
@@ -409,8 +406,6 @@ class PARAM_DATASET:
             Rho_flux=Rho_flux+[rho_flux]
             V_flux=V_flux+[v_flux]
             E_flux=E_flux+[e_flux]
-            if i==self.args.param_ind+1:
-                  plot_mode(temp,np.arange(args.tstop-args.tstart),self.args) 
         self.spatial_modes = np.array(Spatial_modes)
         self.data = np.array(Data)
         self.lv = np.array(Lv)

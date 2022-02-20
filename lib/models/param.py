@@ -77,14 +77,14 @@ class nodernn(nn.Module):
 class tempf(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.actv = nn.Tanh()
+        self.actv = nn.Sigmoid()
         self.dense1 = nn.Linear(in_channels, out_channels)
         self.dense2 = nn.Linear(out_channels, out_channels)
         self.dense3 = nn.Linear(out_channels, out_channels)
         # torch.nn.init.uniform(self.dense1.weight,-EPS, EPS)
     def forward(self, h, x):
         out = self.dense1(x)
-        #out = self.actv(out)
+        out = self.actv(out)
         #out = self.dense2(out)
         return out
 

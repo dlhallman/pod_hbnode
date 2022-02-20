@@ -66,12 +66,10 @@ def mode_prediction(predictions,true,times,verts,args,end_str=''):
     plt.rc('xtick',labelsize=14)
     plt.rc('ytick',labelsize=14)
     plt.figure(tight_layout=True)
-    if len(times)!=len(predictions):
-        times = np.arange(len(predictions))
     for i,node in enumerate(predictions.T):
         plt.subplot(2,2,i+1)
-        plt.plot(times,true.T[i], 'k', label='True')
         plt.plot(times,node, 'r', dashes=[1,1], label='Prediction')
+        plt.plot(times,true.T[i], 'k',dashes=[1,2], label='True')
         min_1,max_1=np.min(true.T[i]),np.max(true.T[i])
         min_2,max_2=np.min(node),np.max(node)
         min_,max_=min(min_1,min_2),max(max_1,max_2)
