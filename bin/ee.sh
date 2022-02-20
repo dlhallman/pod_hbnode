@@ -1,16 +1,16 @@
 # !/bin/sh
 echo "USING PYTHON EXECUTABLE $1"
 
-#echo "GENERATING EE PREDICTIONS"
-#$1 src/run_param.py \
-#    --dataset EE \
-#    --data_dir ./data/EulerEqs.npz \
-#    --load_file ./out/ee/pth/ee_0_181_pod_8.npz \
-#    --out_dir ./out/ee/ \
-#    --tr_ind 150 \
-#    --param_ind 90 \
-#    --model NODE \
-#    --epochs 100
+echo "GENERATING EE PREDICTIONS"
+$1 src/run_param.py \
+    --dataset EE \
+    --data_dir ./data/EulerEqs.npz \
+    --load_file ./out/ee/pth/ee_0_181_pod_8.npz \
+    --out_dir ./out/ee/ \
+    --tr_ind 150 \
+    --param_ind 90 \
+    --model NODE \
+    --epochs 100
 
 $1 src/run_param.py \
     --dataset EE \
@@ -21,7 +21,7 @@ $1 src/run_param.py \
     --param_ind 90 \
     --model HBNODE \
     --layers 2 \
-    --epochs 1
+    --epochs 100
 
 #echo "COMPARISON PLOTS"
 #$1 src/compare.py \
