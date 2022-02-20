@@ -50,8 +50,8 @@ class temprnn(nn.Module):
         out = torch.cat([h[:, 0], h[:, 1], x], dim=1).to(device)
         out = self.dense1(out)
         out = self.actv(out)
-        #out = self.dense2(out)
-        #out = self.actv(out)
+        out = self.dense2(out)
+        out = self.actv(out)
         out = self.dense3(out).reshape(h.shape)
         out = out + h
         return out
@@ -68,8 +68,8 @@ class nodernn(nn.Module):
         out = torch.cat([h, x], dim=1).to(device)
         out = self.dense1(out)
         out = self.actv(out)
-        #out = self.dense2(out)
-        #out = self.actv(out)
+        out = self.dense2(out)
+        out = self.actv(out)
         out = self.dense3(out)
         out = out.reshape(h.shape)
         return out
@@ -79,13 +79,9 @@ class tempf(nn.Module):
         super().__init__()
         self.actv = nn.Sigmoid()
         self.dense1 = nn.Linear(in_channels, out_channels)
-        self.dense2 = nn.Linear(out_channels, out_channels)
-        self.dense3 = nn.Linear(out_channels, out_channels)
-        # torch.nn.init.uniform(self.dense1.weight,-EPS, EPS)
     def forward(self, h, x):
         out = self.dense1(x)
         out = self.actv(out)
-        #out = self.dense2(out)
         return out
 
 class tempout(nn.Module):
@@ -123,7 +119,7 @@ class SONODE(NODE):
         return torch.cat((v, out), dim=1).to(device)
 
 class HeavyBallNODE(NODE):
-    def __init__(self, df, actv_h=None, gamma_guess=-3.0, gamma_act='sigmoid', corr=-100, corrf=True):
+    def __init__(self, df, actv_h=None, gamma_guess=-1.0, gamma_act='sigmoid', corr=-100, corrf=True):
         super().__init__(df)
         # Momentum parameter gamma
         self.gamma = Parameter([gamma_guess], frozen=False)
@@ -171,10 +167,7 @@ class HBMODEL(nn.Module):
         self.cell = HeavyBallNODE(tempf(nhid, nhid), corr=args.corr, corrf=True)
         self.rnn = temprnn(modes, nhid, nhid, res=res, cont=cont)
         self.ode_rnn = ODE_RNN_with_Grad_Listener(self.cell, self.rnn, (2, nhid), None, tol=1e-7)
-        self.outlayer = nn.Linear(nhid, modes)
-
-        # torch.nn.init.uniform(self.outlayer.weight,-EPS, EPS)
-
+        self.outlayer = tempout(nhid, modes)
     def forward(self, t, x):
         out = self.ode_rnn(t, x, retain_grad=True)[0]
         out = self.outlayer(out[:, :, 0])[1:]

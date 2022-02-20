@@ -42,7 +42,7 @@ data_parser.add_argument('--param_ind', type=int, default=80,
 model_params = parser.add_argument_group('Model Parameters')
 model_params.add_argument('--model', type=str, default='NODE',
                   help='Model choices - GHBNODE, HBNODE, NODE.')
-model_params.add_argument('--corr', type=int, default=100,
+model_params.add_argument('--corr', type=int, default=5,
                   help='Skip gate input into soft max function.')
 train_params = parser.add_argument_group('Training Parameters')
 train_params.add_argument('--epochs', type=int, default=500,

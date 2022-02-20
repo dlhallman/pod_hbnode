@@ -346,8 +346,8 @@ class PARAM_DATASET:
         self.reduce()
 
         data = np.moveaxis(self.data,0,1)
-        self.mean_data = data.mean(axis=(0,1))
-        self.std_data = data.std(axis=(0,1))
+        self.mean_data = data.mean(axis=0)
+        self.std_data = data.std(axis=0)
         data = (data - self.mean_data) / self.std_data
         self.data = np.moveaxis(data,1,0) 
 
