@@ -22,7 +22,7 @@ data_parser.add_argument('--model_list', type=str, required=True,
 data_parser.add_argument('--comparisons', type=str, required=True,
                     nargs='+',choices=['forward_nfe','backward_nfe','tr_loss','val_loss','forward_stiff','backward_stiff'])
 data_parser.add_argument('--color_list', type=str, default=['k','r','tab:cyan','tab:green'],
-                    nargs='+',choices=['forward_nfe','backward_nfe','tr_loss','val_loss'])
+                    nargs='+',choices=['forward_nfe','backward_nfe','tr_loss','val_loss','adjgrads'])
 data_parser.add_argument('--epoch_freq', type=int, default=1,
                     help='Epoch frequency to compare models at.')
 data_parser.add_argument('--verbose', default=False, action='store_true',

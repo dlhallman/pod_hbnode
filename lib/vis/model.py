@@ -204,7 +204,7 @@ def compare_loss(file_list,model_list,index_,args):
         plt.ylim(1e-4,1)
     else:
         plt.yticks(np.logspace(-2,0,3))
-        plt.ylim(.4e-1,1)
+        plt.ylim(.4e-2,1)
     epochs=np.arange(len(losses[::args.epoch_freq]))*args.epoch_freq
     plt.xlim(0,epochs[-1])
     plt.yscale('log')
