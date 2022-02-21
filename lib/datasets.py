@@ -345,24 +345,24 @@ class PARAM_DATASET:
         
         self.reduce()
 
-        data = np.moveaxis(self.data,0,1)
-        self.mean_data = data.mean(axis=0)
-        self.std_data = data.std(axis=0)
-        data = (data - self.mean_data) / self.std_data
-        self.data = np.moveaxis(data,1,0) 
+        self.data = np.moveaxis(self.data,0,1)
+        self.mean_data = self.data.mean(axis=0)
+        self.std_data = self.data.std(axis=0)
+        self.data = (self.data - self.mean_data) / self.std_data
+        self.data = np.moveaxis(self.data,1,0) 
 
         #SEQUENCE DATA
         train_size = args.param_ind
-        self.data_shuffled = self.data.copy()
+        self.data_shuffled = self.data
         np.random.shuffle(self.data_shuffled)
         train =self.data_shuffled[:train_size]
         valid =self.data_shuffled[train_size:]
         train = np.moveaxis(train,0,1)
         train_data = train[:args.tr_ind]
-        train_label = train[args.tr_ind-1:]
+        train_label = train[args.tr_ind:]
         valid = np.moveaxis(valid,0,1)
         valid_data = valid[:args.tr_ind]
-        valid_label = valid[args.tr_ind-1:]
+        valid_label = valid[args.tr_ind:]
 
         train_data = torch.FloatTensor(train_data)
         train_label = torch.FloatTensor(train_label)

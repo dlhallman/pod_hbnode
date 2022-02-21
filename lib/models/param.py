@@ -53,7 +53,7 @@ class temprnn(nn.Module):
         out = self.dense2(out)
         out = self.actv(out)
         out = self.dense3(out).reshape(h.shape)
-        out = out + h
+        #out = out + h
         return out
 
 class nodernn(nn.Module):
@@ -89,7 +89,6 @@ class tempout(nn.Module):
         super().__init__()
         self.actv = nn.Tanh()
         self.dense1 = nn.Linear(in_channels, out_channels)
-        torch.nn.init.uniform(self.dense1.weight, -EPS, EPS).to(device)
     def forward(self, x):
         out = self.dense1(x)
         return out
@@ -119,7 +118,7 @@ class SONODE(NODE):
         return torch.cat((v, out), dim=1).to(device)
 
 class HeavyBallNODE(NODE):
-    def __init__(self, df, actv_h=None, gamma_guess=-1.0, gamma_act='sigmoid', corr=-100, corrf=True):
+    def __init__(self, df, actv_h=None, gamma_guess=-5.0, gamma_act='sigmoid', corr=-100, corrf=True):
         super().__init__(df)
         # Momentum parameter gamma
         self.gamma = Parameter([gamma_guess], frozen=False)
@@ -149,7 +148,7 @@ class NMODEL(nn.Module):
     def __init__(self, args):
         super(NMODEL, self).__init__()
         modes = args.modes
-        nhid = modes*8
+        nhid = modes*2
         self.cell = NODE(tempf(nhid, nhid))
         self.rnn = nodernn(modes, nhid, nhid)
         self.ode_rnn = ODE_RNN_with_Grad_Listener(self.cell, self.rnn, nhid, None, rnn_out=True, tol=1e-7)
@@ -163,11 +162,11 @@ class HBMODEL(nn.Module):
     def __init__(self,args,  res=False, cont=False):
         super(HBMODEL, self).__init__()
         modes = args.modes
-        nhid = modes*8
+        nhid = modes*4
         self.cell = HeavyBallNODE(tempf(nhid, nhid), corr=args.corr, corrf=True)
         self.rnn = temprnn(modes, nhid, nhid, res=res, cont=cont)
         self.ode_rnn = ODE_RNN_with_Grad_Listener(self.cell, self.rnn, (2, nhid), None, tol=1e-7)
-        self.outlayer = tempout(nhid, modes)
+        self.outlayer = nn.Linear(nhid, modes)
     def forward(self, t, x):
         out = self.ode_rnn(t, x, retain_grad=True)[0]
         out = self.outlayer(out[:, :, 0])[1:]
@@ -178,15 +177,11 @@ class GHBMODEL(nn.Module):
     def __init__(self, args, res=False, cont=False):
         super(GHBMODEL, self).__init__()
         modes = args.modes
-        nhid = modes*8
+        nhid = modes
         self.cell = HeavyBallNODE(tempf(nhid, nhid), corr=args.corr, corrf=False, actv_h=nn.Tanh())
-        # self.cell = HeavyBallNODE(tempf(nhid, nhid))
         self.rnn = temprnn(modes, nhid, nhid, res=res, cont=cont)
         self.ode_rnn = ODE_RNN_with_Grad_Listener(self.cell, self.rnn, (2, nhid), None, tol=1e-7)
-        self.outlayer = nn.Linear(nhid, modes)
-
-        torch.nn.init.uniform(self.outlayer.weight, -EPS, EPS).to(device)
-
+        self.outlayer = nn.Linear(nhid,modes)
 
     def forward(self, t, x):
         out = self.ode_rnn(t, x, retain_grad=True)[0]

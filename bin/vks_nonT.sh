@@ -18,8 +18,8 @@
      --lifts sin cos quad cube \
      --modes 24 \
      --tstart 100 \
-     --tstop 180 \
-     --tpred 100
+     --tstop 400 \
+     --tpred 399
  
  
  echo "GENERATING NON-TRANSIENT VKS VAE PREDICTIONS"

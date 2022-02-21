@@ -23,8 +23,8 @@ def eig_decay(dataset,args):
 
     plt.figure(tight_layout=True)
     plt.plot(x,decay, 'k',linewidth=2)
-    plt.xlabel('Number of Modes $(N)$',fontsize=36)
-    plt.ylabel('$1-I(N)$',fontsize=36)
+    plt.xlabel('Number of Modes $(r)$',fontsize=36)
+    plt.ylabel('$1-I(r)$',fontsize=36)
     plt.yscale('log')
     plt.yticks(np.logspace(-10,0,11))
     plt.ylim(1e-10,1)

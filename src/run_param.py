@@ -33,21 +33,21 @@ data_parser.add_argument('--tstart', type = int, default=0,
                   help='Start time for reduction along time axis.')
 data_parser.add_argument('--tstop', type=int, default=181,
                   help='Stop time for reduction along time axis.' )
-data_parser.add_argument('--batch_size', type=int, default=80,
+data_parser.add_argument('--batch_size', type=int, default=200,
               help='Time index for validation data.' )
-data_parser.add_argument('--tr_ind', type=int, default=10,
+data_parser.add_argument('--tr_ind', type=int, default=150,
               help='Time index for data and label separation.' )
-data_parser.add_argument('--param_ind', type=int, default=80,
+data_parser.add_argument('--param_ind', type=int, default=90,
               help='Param index for validation data.' )
 model_params = parser.add_argument_group('Model Parameters')
 model_params.add_argument('--model', type=str, default='NODE',
                   help='Model choices - GHBNODE, HBNODE, NODE.')
-model_params.add_argument('--corr', type=int, default=5,
+model_params.add_argument('--corr', type=int, default=-100,
                   help='Skip gate input into soft max function.')
 train_params = parser.add_argument_group('Training Parameters')
-train_params.add_argument('--epochs', type=int, default=500,
+train_params.add_argument('--epochs', type=int, default=100,
                   help='Training epochs.')
-train_params.add_argument('--layers', type=int, default=1,
+train_params.add_argument('--layers', type=int, default=2,
               help='Encoder Layers.')
 train_params.add_argument('--lr', type=float, default=0.0015,
                   help = 'Initial learning rate.')
@@ -169,27 +169,24 @@ rec_file = args.out_dir+ './pth/'+args.model+'.csv'
 rec.writecsv(rec_file)
 args.model = str('param_'+args.model).lower()
 tr_pred= model(param.train_times, param.train_data).cpu().detach()
-tr_pred = tr_pred[1:tr_pred.shape[0]-param.label_pad]
+tr_pred = tr_pred[:tr_pred.shape[0]-param.label_pad]
 
 val_pred = model(param.valid_times, param.valid_data).cpu().detach().numpy()
-val_pred = val_pred[1:val_pred.shape[0]-param.label_pad]
+val_pred = val_pred[:val_pred.shape[0]-param.label_pad]
 
-trained = np.vstack((param.train_data[:param.train_data.shape[0]-param.data_pad],tr_pred))
-validated = np.vstack((param.valid_data[:param.valid_data.shape[0]-param.data_pad],val_pred))
+trained = np.vstack((param.train_data[:args.tr_ind],tr_pred))
+validated = np.vstack((param.valid_data[:args.tr_ind],val_pred))
 
-trained_true = np.vstack((param.train_data[:args.tr_ind],param.train_label[1:param.train_label.shape[0]-param.label_pad]))
-validated_true = np.vstack((param.valid_data[:args.tr_ind],param.valid_label[1:param.valid_label.shape[0]-param.label_pad]))
+trained_true = np.vstack((param.train_data[:args.tr_ind],param.train_label[:param.train_label.shape[0]-param.label_pad]))
+validated_true = np.vstack((param.valid_data[:args.tr_ind],param.valid_label[:param.valid_label.shape[0]-param.label_pad]))
 
 times = np.arange(args.tstart,args.tstop)
 
 data = np.hstack((trained,validated))*param.std_data+param.mean_data
 data_true = np.hstack((trained_true,validated_true))*param.std_data+param.mean_data
 
-print(data[args.tr_ind-2:args.tr_ind+2,args.param_ind+2,:4])
-print(data_true[args.tr_ind-2:args.tr_ind+2,args.param_ind+2,:4])
-
 #DATA PLOTS
-verts = [args.tstart+args.tr_ind-1]
+verts = [args.tstart+args.tr_ind]
 true = np.moveaxis(param.data.copy(),0,1)
 mode_prediction(data[:,args.param_ind+2,:4],data_true[:,args.param_ind+2,:4],times,verts,args,'_val')
 mode_prediction(data[:,0,:4],data_true[:,0,:4],times,verts,args)
