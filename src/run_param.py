@@ -169,16 +169,16 @@ rec_file = args.out_dir+ './pth/'+args.model+'.csv'
 rec.writecsv(rec_file)
 args.model = str('param_'+args.model).lower()
 tr_pred= model(param.train_times, param.train_data).cpu().detach()
-tr_pred = tr_pred[1:tr_pred.shape[0]-param.label_pad+1]
+tr_pred = tr_pred[-param.label_len:]
 
 val_pred = model(param.valid_times, param.valid_data).cpu().detach().numpy()
-val_pred = val_pred[1:val_pred.shape[0]-param.label_pad+1]
+val_pred = val_pred[-param.label_len:]
 
 trained = np.vstack((param.train_data[:args.tr_ind],tr_pred))
 validated = np.vstack((param.valid_data[:args.tr_ind],val_pred))
 
-trained_true = np.vstack((param.train_data[:args.tr_ind],param.train_label[1:param.train_label.shape[0]-param.label_pad+1]))
-validated_true = np.vstack((param.valid_data[:args.tr_ind],param.valid_label[1:param.valid_label.shape[0]-param.label_pad+1]))
+trained_true = np.vstack((param.train_data[:args.tr_ind],param.train_label[-param.label_len:]))
+validated_true = np.vstack((param.valid_data[:args.tr_ind],param.valid_label[-param.label_len:]))
 
 times = np.arange(args.tstart,args.tstop)
 
