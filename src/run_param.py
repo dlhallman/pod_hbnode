@@ -27,7 +27,7 @@ data_parser.add_argument('--data_dir', type=str, default='data/EulerEqs.npz',
                   help='Directory of data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/ee/',
                   help='Directory of output from cwd: sci.')
-data_parser.add_argument('--modes', type = int, default = 8,
+data_parser.add_argument('--modes', type = int, default = 4,
                   help = 'POD reduction modes.')
 data_parser.add_argument('--tstart', type = int, default=0,
                   help='Start time for reduction along time axis.')
@@ -49,7 +49,7 @@ train_params.add_argument('--epochs', type=int, default=100,
                   help='Training epochs.')
 train_params.add_argument('--layers', type=int, default=2,
               help='Encoder Layers.')
-train_params.add_argument('--lr', type=float, default=0.0015,
+train_params.add_argument('--lr', type=float, default=0.001,
                   help = 'Initial learning rate.')
 train_params.add_argument('--factor', type=float, default=0.99,
                   help = 'Initial learning rate.')
@@ -169,16 +169,16 @@ rec_file = args.out_dir+ './pth/'+args.model+'.csv'
 rec.writecsv(rec_file)
 args.model = str('param_'+args.model).lower()
 tr_pred= model(param.train_times, param.train_data).cpu().detach()
-tr_pred = tr_pred[:tr_pred.shape[0]-param.label_pad]
+tr_pred = tr_pred[1:tr_pred.shape[0]-param.label_pad+1]
 
 val_pred = model(param.valid_times, param.valid_data).cpu().detach().numpy()
-val_pred = val_pred[:val_pred.shape[0]-param.label_pad]
+val_pred = val_pred[1:val_pred.shape[0]-param.label_pad+1]
 
 trained = np.vstack((param.train_data[:args.tr_ind],tr_pred))
 validated = np.vstack((param.valid_data[:args.tr_ind],val_pred))
 
-trained_true = np.vstack((param.train_data[:args.tr_ind],param.train_label[:param.train_label.shape[0]-param.label_pad]))
-validated_true = np.vstack((param.valid_data[:args.tr_ind],param.valid_label[:param.valid_label.shape[0]-param.label_pad]))
+trained_true = np.vstack((param.train_data[:args.tr_ind],param.train_label[1:param.train_label.shape[0]-param.label_pad+1]))
+validated_true = np.vstack((param.valid_data[:args.tr_ind],param.valid_label[1:param.valid_label.shape[0]-param.label_pad+1]))
 
 times = np.arange(args.tstart,args.tstop)
 

@@ -362,7 +362,7 @@ class PARAM_DATASET:
         train_label = train[args.tr_ind:]
         valid = np.moveaxis(valid,0,1)
         valid_data = valid[:args.tr_ind]
-        valid_label = valid[args.tr_ind:]
+        valid_label = valid[args.tr_ind-1:]
 
         train_data = torch.FloatTensor(train_data)
         train_label = torch.FloatTensor(train_label)
@@ -374,11 +374,26 @@ class PARAM_DATASET:
         label_pad = padd-train_label.shape[0]
         self.data_pad = data_pad
         self.label_pad = label_pad
+        data_padding = nn.ReflectionPad1d((0,train_data.shape[0]-1))
+        label_padding = nn.ReflectionPad1d((0,train_label.shape[0]-1))
 
-        train_data = nn.functional.pad(train_data,(0,0,0,0,0,data_pad),mode='reflect')
-        train_label = nn.functional.pad(train_label,(0,0,0,0,0,label_pad),mode='reflect')
-        valid_data = nn.functional.pad(valid_data,(0,0,0,0,0,data_pad),mode='reflect')
-        valid_label = nn.functional.pad(valid_label,(0,0,0,0,0,label_pad),mode='reflect')
+        #train_data = data_padding(train_data)
+        #valid_data = data_padding(valid_data)
+        while train_data.shape[0]<train_label.shape[0]:
+          train_data = data_padding(train_data.T).T
+          valid_data = data_padding(valid_data.T).T
+        while train_label.shape[0]<train_data.shape[0]:
+          train_label = label_padding(train_label.T).T
+          valid_label = label_padding(valid_label.T).T
+
+        train_data=train_data[:padd]
+        train_label=train_label[:padd]
+        valid_data=valid_data[:padd]
+        valid_label=valid_label[:padd]
+        #train_data = nn.functional.pad(train_data,(0,0,0,0,0,label_pad))
+        #train_label = nn.functional.pad(train_label,(0,0,0,0,0,label_pad))
+        #valid_data = nn.functional.pad(valid_data,(0,0,0,0,0,data_pad))
+        #valid_label = nn.functional.pad(valid_label,(0,0,0,0,0,label_pad))
         
 
         self.train_data = torch.FloatTensor(train_data).to(args.device)
@@ -391,6 +406,7 @@ class PARAM_DATASET:
 
     """POD Model Reduction"""
     def reduce(self):
+        avg=0
         args = self.args
         Spatial_modes=[]
         Data=[]
@@ -406,6 +422,8 @@ class PARAM_DATASET:
             Rho_flux=Rho_flux+[rho_flux]
             V_flux=V_flux+[v_flux]
             E_flux=E_flux+[e_flux]
+            avg = sum(lv[:args.modes])/sum(lv) + avg
+        if args.verbose: print('Avergage relative information content:',avg/self.data.shape[0])
         self.spatial_modes = np.array(Spatial_modes)
         self.data = np.array(Data)
         self.lv = np.array(Lv)

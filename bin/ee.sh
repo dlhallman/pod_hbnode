@@ -1,30 +1,30 @@
 # !/bin/sh
 echo "USING PYTHON EXECUTABLE $1"
 
-echo "GENERATING EE PREDICTIONS"
-$1 src/run_param.py \
-    --dataset EE \
-    --data_dir ./data/EulerEqs.npz \
-    --out_dir ./out/ee/ \
-    --tstart 0 \
-    --tstop 180 \
-    --tr_ind 150 \
-   --param_ind 90 \
-    --model NODE \
-    --epochs 200 \
-    --verbose True
-
-$1 src/run_param.py \
-    --dataset EE \
-    --data_dir ./data/EulerEqs.npz \
-    --out_dir ./out/ee/ \
-    --tstart 0 \
-   --tstop 180 \
-    --tr_ind 150 \
-    --param_ind 90 \
-    --model GHBNODE \
-    --epochs 200 \
-    --verbose True
+#echo "GENERATING EE PREDICTIONS"
+#$1 src/run_param.py \
+#    --dataset EE \
+#    --data_dir ./data/EulerEqs.npz \
+#    --out_dir ./out/ee/ \
+#    --tstart 0 \
+#    --tstop 180 \
+#    --tr_ind 150 \
+#   --param_ind 90 \
+#    --model NODE \
+#    --epochs 100 \
+#    --verbose True
+#
+#$1 src/run_param.py \
+#    --dataset EE \
+#    --data_dir ./data/EulerEqs.npz \
+#    --out_dir ./out/ee/ \
+#    --tstart 0 \
+#   --tstop 180 \
+#    --tr_ind 150 \
+#    --param_ind 90 \
+#    --model GHBNODE \
+#    --epochs 100 \
+#    --verbose True
 
 echo "COMPARISON PLOTS"
 $1 src/compare.py \
