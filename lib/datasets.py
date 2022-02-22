@@ -375,10 +375,10 @@ class PARAM_DATASET:
         self.data_pad = data_pad
         self.label_pad = label_pad
 
-        train_data = nn.functional.pad(train_data,(0,0,0,0,0,data_pad))
-        train_label = nn.functional.pad(train_label,(0,0,0,0,0,label_pad))
-        valid_data = nn.functional.pad(valid_data,(0,0,0,0,0,data_pad))
-        valid_label = nn.functional.pad(valid_label,(0,0,0,0,0,label_pad))
+        train_data = nn.functional.pad(train_data,(0,0,0,0,0,data_pad),mode='reflect')
+        train_label = nn.functional.pad(train_label,(0,0,0,0,0,label_pad),mode='reflect')
+        valid_data = nn.functional.pad(valid_data,(0,0,0,0,0,data_pad),mode='reflect')
+        valid_label = nn.functional.pad(valid_label,(0,0,0,0,0,label_pad),mode='reflect')
         
 
         self.train_data = torch.FloatTensor(train_data).to(args.device)
