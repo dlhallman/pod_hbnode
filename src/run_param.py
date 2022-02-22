@@ -49,7 +49,7 @@ train_params.add_argument('--epochs', type=int, default=100,
                   help='Training epochs.')
 train_params.add_argument('--layers', type=int, default=2,
               help='Encoder Layers.')
-train_params.add_argument('--lr', type=float, default=0.001,
+train_params.add_argument('--lr', type=float, default=0.01,
                   help = 'Initial learning rate.')
 train_params.add_argument('--factor', type=float, default=0.99,
                   help = 'Initial learning rate.')

@@ -178,7 +178,7 @@ class GHBMODEL(nn.Module):
         super(GHBMODEL, self).__init__()
         modes = args.modes
         nhid = modes*2
-        self.cell = HeavyBallNODE(tempf(nhid, nhid), corr=args.corr, corrf=False, actv_h=nn.Sigmoid())
+        self.cell = HeavyBallNODE(tempf(nhid, nhid), corr=args.corr, corrf=False, actv_h=nn.Tanh())
         self.rnn = temprnn(modes, nhid, nhid, res=res, cont=cont)
         self.ode_rnn = ODE_RNN_with_Grad_Listener(self.cell, self.rnn, (2, nhid), None, tol=1e-7)
         self.outlayer = nn.Linear(nhid,modes)
