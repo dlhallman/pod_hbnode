@@ -162,11 +162,7 @@ class HBMODEL(nn.Module):
     def __init__(self,args,  res=False, cont=False):
         super(HBMODEL, self).__init__()
         modes = args.modes
-<<<<<<< HEAD
-        nhid = modes*2
-=======
         nhid = modes*4
->>>>>>> c2ec3725d6a99d24ed118a320fb28c1e7aa0db74
         self.cell = HeavyBallNODE(tempf(nhid, nhid), corr=args.corr, corrf=True)
         self.rnn = temprnn(modes, nhid, nhid, res=res, cont=cont)
         self.ode_rnn = ODE_RNN_with_Grad_Listener(self.cell, self.rnn, (2, nhid), None, tol=1e-7)

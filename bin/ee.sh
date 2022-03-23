@@ -1,32 +1,6 @@
 # !/bin/sh
 echo "USING PYTHON EXECUTABLE $1"
 
-<<<<<<< HEAD
-echo "GENERATING EE PREDICTIONS"
-$1 src/run_param.py \
-    --dataset EE \
-    --data_dir ./data/EulerEqs.npz \
-    --load_file ./out/ee/pth/ee_0_181_pod_8.npz \
-    --out_dir ./out/ee/ \
-    --tr_ind 150 \
-    --param_ind 90 \
-    --model NODE \
-    --epochs 100 
-=======
-#echo "GENERATING EE PREDICTIONS"
-#$1 src/run_param.py \
-#    --dataset EE \
-#    --data_dir ./data/EulerEqs.npz \
-#    --out_dir ./out/ee/ \
-#    --tstart 0 \
-#    --tstop 180 \
-#    --tr_ind 150 \
-#  --param_ind 90 \
-#    --model NODE \
-#    --epochs 100 \
-#    --verbose True
->>>>>>> c2ec3725d6a99d24ed118a320fb28c1e7aa0db74
-
 #$1 src/run_param.py \
 #    --dataset EE \
 #    --data_dir ./data/EulerEqs.npz \
