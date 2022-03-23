@@ -22,7 +22,11 @@ def eig_decay(dataset,args):
     x = np.arange(0,1000)
 
     plt.figure(tight_layout=True)
+<<<<<<< HEAD
     plt.plot(x,decay[:1000], 'k',linewidth=2)
+=======
+    plt.plot(x,decay, 'k',linewidth=2)
+>>>>>>> c2ec3725d6a99d24ed118a320fb28c1e7aa0db74
     plt.xlabel('Number of Modes $(r)$',fontsize=36)
     plt.ylabel('$1-I(r)$',fontsize=36)
     plt.yscale('log')
