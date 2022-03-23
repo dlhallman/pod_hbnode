@@ -28,13 +28,11 @@ The VKS dataset can be found [here](url)
 
 ## Executing Experiments
 
-All experiments are set in `./bin/run.sh`. The script takes one commandline argument for your python executable {python,python3}.
+All(most) experiments are set in `./bin/run.sh`. The script takes one commandline argument for your python executable {python,python3}.
 
 ```bash
 sh ./bin/run.sh python3
 ```
-
-This script takes ~4hr to execute. All experimental results are broken into separate executable scripts in the `./bin/` directory.
 
 ## Executing Code
 
