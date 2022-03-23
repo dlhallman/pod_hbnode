@@ -391,6 +391,7 @@ class PARAM_DATASET:
 
     """POD Model Reduction"""
     def reduce(self):
+        avg=0
         args = self.args
         Spatial_modes=[]
         Data=[]
@@ -403,6 +404,7 @@ class PARAM_DATASET:
             Spatial_modes=Spatial_modes+[spatial_modes]
             Data=Data+[temp]
             Lv=Lv+[lv]
+            avg = avg + sum(lv[:8])/sum(lv)
             Rho_flux=Rho_flux+[rho_flux]
             V_flux=V_flux+[v_flux]
             E_flux=E_flux+[e_flux]
@@ -412,5 +414,8 @@ class PARAM_DATASET:
         self.rho_flux = np.array(Rho_flux)
         self.v_flux = np.array(V_flux)
         self.e_flux = np.array(E_flux)
+        avg=avg/i
+        print('Average Relative information value is:',avg)
+
     def reconstruct(self):
       self.data_recon = pod_mode_to_true(self,self.data,self.args)

@@ -10,7 +10,7 @@ $1 src/run_param.py \
     --tr_ind 150 \
     --param_ind 90 \
     --model NODE \
-    --epochs 100
+    --epochs 100 
 
 $1 src/run_param.py \
     --dataset EE \

@@ -8,8 +8,9 @@
      --out_dir ./out/kpp/ \
      --modes 8 \
      --tstart 0 \
-     --tstop 1251 \
-     --tpred 500
+     --tstop 1000 \
+     --tpred 999 \
+     --verbose
  
  $1 src/run_dmd.py \
      --dataset KPP \
@@ -19,7 +20,10 @@
      --tstart 0 \
      --tstop 1000 \
      --tpred 999 \
-     --lifts sin cos quad cube
+     --lifts sin cos quad cube \
+     --verbose
+
+ exit 1
  
  
  echo "GENERATING KPP PREDICTIONS"

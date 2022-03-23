@@ -47,6 +47,7 @@ uq_params.add_argument('--verbose', default=False, action='store_true',
 args, unknown = parser.parse_known_args()
 
 assert(args.tstop-args.tstart>args.modes)
+print(args.tstop)
 
 if args.verbose:
     print('Parsed Arguments')

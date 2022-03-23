@@ -19,12 +19,12 @@ def eig_decay(dataset,args):
         decay = decay + [decay[-1]-val]
     decay = np.array(decay)
     #X-DATA
-    x = np.arange(0,len(decay))
+    x = np.arange(0,1000)
 
     plt.figure(tight_layout=True)
-    plt.plot(x,decay, 'k',linewidth=2)
-    plt.xlabel('Number of Modes $(N)$',fontsize=36)
-    plt.ylabel('$1-I(N)$',fontsize=36)
+    plt.plot(x,decay[:1000], 'k',linewidth=2)
+    plt.xlabel('Number of Modes $(r)$',fontsize=36)
+    plt.ylabel('$1-I(r)$',fontsize=36)
     plt.yscale('log')
     plt.yticks(np.logspace(-10,0,11))
     plt.ylim(1e-10,1)
@@ -45,9 +45,10 @@ def plot_mode(modes,times,args):
     plt.rc('xtick',labelsize=16)
     plt.rc('ytick',labelsize=16)
     plt.figure(tight_layout=True)
+    times=np.arange(1000)
     for i,node in enumerate(modes.T):
         plt.subplot(2,2,i+1)
-        plt.plot(times,node,'k')
+        plt.plot(times,node[:1000],'k')
         plt.xlabel("Time $(t)$",fontsize=24)
         plt.ylabel("$\\alpha_{}$".format(i),fontsize=24)
         plt.xlim(times[0],times[-1])
@@ -66,6 +67,7 @@ def mode_prediction(predictions,true,times,verts,args,end_str=''):
     plt.rc('xtick',labelsize=14)
     plt.rc('ytick',labelsize=14)
     plt.figure(tight_layout=True)
+    times=np.arange(len(predictions))
     for i,node in enumerate(predictions.T):
         plt.subplot(2,2,i+1)
         plt.plot(times,node, 'r', dashes=[1,1], label='Prediction')
