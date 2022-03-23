@@ -2,7 +2,6 @@
 
 
  ![](https://img.shields.io/static/v1?label=python&message=v3.8.8&color=green&style=plastic)
- ![](https://img.shields.io/static/v1?label=repo%20size&message=1.5%20GB&color=orange&style=plastic)
 
 [commet]: <> (TODO: Update the above repo size at launch to exclude output and data directores. Current estimated size ~100 MB)
 
