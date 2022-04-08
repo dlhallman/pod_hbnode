@@ -6,6 +6,7 @@ import warnings
 #SELF IMPORTS
 import sys
 sys.path.append('./')
+sys.path.append('../')
 
 from lib.decomp.pod import *
 from lib.datasets import POD_DATASET 
@@ -26,18 +27,18 @@ data_parser.add_argument('--dataset', type=str, default='VKS',
                     help='Dataset types: [VKS, EE, FIB].')
 data_parser.add_argument('--load_file', type=str, default=None,
                     help='Directory to load DMD data from.')
-data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
+data_parser.add_argument('--data_dir', type=str, default='../data/VKS.pkl',
                     help='Directory of data from cwd: sci.')
-data_parser.add_argument('--out_dir', type=str, default='./out/',
+data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred',
                     help='Directory of output from cwd: sci.')
 decomp_parser = parser.add_argument_group('Decomposition Parameters')
-decomp_parser.add_argument('--modes', type = int, default = 64,
+decomp_parser.add_argument('--modes', type = int, default = 8,
                     help = 'POD reduction modes.\nNODE model parameters.')
-decomp_parser.add_argument('--tstart', type = int, default=0,
+decomp_parser.add_argument('--tstart', type = int, default=100,
                     help='Start time for reduction along time axis.')
-decomp_parser.add_argument('--tstop', type=int, default=399,
+decomp_parser.add_argument('--tstop', type=int, default=300,
                     help='Stop time for reduction along time axis.' )
-decomp_parser.add_argument('--tpred', type=int, default=50,
+decomp_parser.add_argument('--tpred', type=int, default=100,
                     help='Output time for reduction along time axis.' )
 uq_params = parser.add_argument_group('Unique Parameters')
 uq_params.add_argument('--eeParam', type=int, default=1,

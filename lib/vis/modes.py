@@ -19,7 +19,7 @@ def eig_decay(dataset,args):
         decay = decay + [decay[-1]-val]
     decay = np.array(decay)
     #X-DATA
-    x = np.arange(0,1000)
+    x = np.arange(0,len(decay))
 
     plt.figure(tight_layout=True)
     plt.plot(x,decay, 'k',linewidth=2)
@@ -45,7 +45,7 @@ def plot_mode(modes,times,args):
     plt.rc('xtick',labelsize=16)
     plt.rc('ytick',labelsize=16)
     plt.figure(tight_layout=True)
-    times=np.arange(1000)
+    times=np.arange(len(predictions))
     for i,node in enumerate(modes.T):
         plt.subplot(2,2,i+1)
         plt.plot(times,node[:1000],'k')

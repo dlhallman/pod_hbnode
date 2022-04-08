@@ -8,6 +8,7 @@ import warnings
 #SELF IMPORTS
 import sys
 sys.path.append('./')
+sys.path.append('../')
 
 from lib.decomp.dmd import *
 from lib.decomp.pod import *
