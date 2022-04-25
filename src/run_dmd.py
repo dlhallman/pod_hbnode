@@ -7,6 +7,7 @@ import warnings
 #SELF IMPORTS
 import sys
 sys.path.append('./')
+sys.path.append('../')
 
 from lib.decomp.dmd import *
 from lib.datasets import DMD_DATASET 
@@ -28,16 +29,16 @@ data_parser.add_argument('--load_file', type=str, default=None,
                     help='Directory to load DMD data from.')
 data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
                     help='Directory of data from cwd: sci.')
-data_parser.add_argument('--out_dir', type=str, default='./out/',
+data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred',
                     help='Directory of output from cwd: sci.')
 decomp_parser = parser.add_argument_group('Decomposition Parameters')
-decomp_parser.add_argument('--modes', type = int, default = 64,
+decomp_parser.add_argument('--modes', type = int, default = 24,
                     help = 'DMD reduction modes.\nNODE model parameters.')
-decomp_parser.add_argument('--tstart', type = int, default=0,
+decomp_parser.add_argument('--tstart', type = int, default=100,
                     help='Start time for reduction along time axis.')
-decomp_parser.add_argument('--tstop', type=int, default=101,
+decomp_parser.add_argument('--tstop', type=int, default=180,
                     help='Stop time for reduction along time axis.' )
-decomp_parser.add_argument('--tpred', type=int, default=400,
+decomp_parser.add_argument('--tpred', type=int, default=100,
                     help='Prediction time.' )
 decomp_parser.add_argument('--lifts', type=str, default='', nargs='+',
                     help='Prediction time.' )

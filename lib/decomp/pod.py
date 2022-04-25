@@ -119,6 +119,28 @@ def PODKPP(data, s_ind, e_ind, modes):
 
     return spatial_modes, temporal_coefficients, eigen_vals, var_flux.copy()
 
+def PODFIBER(data,s_ind,e_ind,modes):
+    """ Computes the spatial modes and temporal coefficients using the POD """
+    # There are no parameters/components in this data
+
+    data_mean = np.mean(data, axis=0)[np.newaxis, ...]
+    
+    # fluctuating components: taking U-Um
+    data_flux = data - data_mean
+
+    # Snapshot Method:
+    snap_shots = np.matmul(data_flux, data_flux.T) # YY^T
+    eigen_vals, eigen_vecs = scipy.linalg.eigh(snap_shots)
+
+    # descending order
+    eigen_vals = eigen_vals[eigen_vals.shape[0]::-1]
+    eigen_vecs = eigen_vecs[:, eigen_vals.shape[0]::-1] #unit norm
+
+    spatial_modes = np.matmul(data_flux.T, eigen_vecs[:, :modes]) / np.sqrt(eigen_vals[:modes]) # is this unit norm?
+    temporal_coefficients = np.matmul(data_flux, spatial_modes) #"throw sqrt of Lv onto temp_coef"
+
+    return spatial_modes, temporal_coefficients, eigen_vals, data_flux
+
 """RECONSTRUCT FROM MODES"""
 def pod_mode_to_true(dataset,modes,args):
     spatial_modes = dataset.spatial_modes
@@ -134,9 +156,11 @@ def pod_mode_to_true(dataset,modes,args):
         true_x = pod_x.reshape(shape)
         true_y = pod_y.reshape(shape)
         true = np.array([true_x.T,true_y.T])
+        return true.T
     elif args.dataset == 'KPP':
         shape = [true.shape[0]] + list(dataset.domain_shape)
         true=true.reshape(shape).T
+        return true.T
 
     elif args.dataset == 'EE':
         params = args.eeParam
@@ -148,4 +172,6 @@ def pod_mode_to_true(dataset,modes,args):
         pod_e = true[:,2*domain_len:].reshape(shape,order='F')
 
         true = np.array([pod_rho.T,pod_v.T,pod_e.T])
-    return true.T
+        return true.T
+    elif args.dataset == 'FIB':
+        return true

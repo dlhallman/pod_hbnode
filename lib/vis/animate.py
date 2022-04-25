@@ -72,12 +72,35 @@ def ee_animate(data,args):
     return 1
 
 
+def fiber_animate(data,args):
+    # run_vae.py adds an extra dimension to the data. We check for that here
+    if data.ndim > 2:
+        data = data[0,:,:]
+    
+    plt.style.use('classic')
+
+    fig, axes = plt.subplots(1,1,tight_layout=True)
+    axes.set_ylim([-2,2])
+    x = np.linspace(0,5,data.shape[1])
+    lines = axes.plot(x,np.zeros(data.shape[1]), 'k')
+    
+    def run_fiber_lines(fiber_t):
+        lines[0].set_ydata(data[fiber_t,:])
+        return lines
+    
+    ani = animation.FuncAnimation(fig, run_fiber_lines, frames = data.shape[0]-1, blit=False, interval=data.shape[0]-1,
+        repeat=False)
+    end_str = str(args.dataset+'_'+args.model+'_recon').lower()
+    ani.save(args.out_dir+'/'+end_str+'.gif', "PillowWriter", fps=6)
+    return 1
+
+
 """
 ANIMATION HEADER
 
 """
 
-ANIM = {'VKS':vks_animate,'KPP':kpp_animate, 'EE':ee_animate}
+ANIM = {'VKS':vks_animate,'KPP':kpp_animate, 'EE':ee_animate, 'FIB': fiber_animate}
 def data_animation(data,args):
 
     ANIM[args.dataset](data,args)

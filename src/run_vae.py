@@ -8,6 +8,7 @@ import numpy as np
 
 import sys
 sys.path.append('./')
+sys.path.append('../')
 
 from lib.datasets import VAE_DATASET
 from lib.decomp.pod import pod_mode_to_true
@@ -25,25 +26,25 @@ from lib.vis.reconstruct import data_reconstruct
 parser = argparse.ArgumentParser(prefix_chars='-+/',
     description='[NODE] NODE parameters.')
 data_parser = parser.add_argument_group('Data Parameters')
-data_parser.add_argument('--dataset', type=str, default='VKS',
-                    help='Dataset types: [VKS, EE].')
-data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
+data_parser.add_argument('--dataset', type=str, default='FIB',
+                    help='Dataset types: [VKS, EE, FIB].')
+data_parser.add_argument('--data_dir', type=str, default='../data/out_pde.dat',
                     help='Directory of data from cwd: sci.')
 data_parser.add_argument('--load_file', type=str,
-                    default='./out/nonT_pred/pth/vks_100_300_pod_8.npz',
+                    default='./out/nonT_pred/pth/fib_0_31_pod_8.npz',
                     help='Directory of pod data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred/',
                     help='Directory of output from cwd: sci.')
-data_parser.add_argument('--tr_ind', type = int, default=75,
+data_parser.add_argument('--tr_ind', type = int, default=10,
                     help='Time index for training data.')
-data_parser.add_argument('--val_ind', type=int, default=100,
+data_parser.add_argument('--val_ind', type=int, default=15,
                     help='Time index for validation data.' )
-data_parser.add_argument('--eval_ind', type=int, default=200,
+data_parser.add_argument('--eval_ind', type=int, default=31,
                     help='Time index for evaluation data.' )
 model_parser = parser.add_argument_group('Model Parameters')
-model_parser.add_argument('--model', type=str, default='NODE',
+model_parser.add_argument('--model', type=str, default='HBNODE',
                     help='Dataset types: [NODE , HBNODE].')
-model_parser.add_argument('--epochs', type=int, default=2000,
+model_parser.add_argument('--epochs', type=int, default=200,
                     help='Training epochs.')
 model_parser.add_argument('--latent_dim', type=int, default=6,
                     help = 'Size of latent dimension')

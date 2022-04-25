@@ -29,9 +29,31 @@ def EE_DAT(data_dir, param=0):
   return ee
 
 def FIB_DAT(data_dir, param=None):
-  data = pd.read_table(data_dir, sep="\t", index_col=2, names=["x", "h"]).to_numpy()
-  end = data.shape[0]//401
-  return data[:,1].reshape(end,401)
+    # There are two data types for the fiber dataset. 
+    # The transient data is contained in out_pde.dat
+    # The non-transient, steady-state data is contained in tws_ode.dat
+    
+    # TODO: automate this code to handle other time and spatial resolutions
+  
+  if 'out_pde' in data_dir:    
+      data = pd.read_table(data_dir, sep="\t", index_col=2, names=["x", "h"]).to_numpy()
+      end = data.shape[0]//401
+      return data[:,1].reshape(end,401)
+  elif 'tws_ode' in data_dir: 
+      raw_data = np.loadtxt(data_dir)
+      vector = raw_data[:,1]
+      data_tensor = vector
+      
+      # Create moving wave (down the rows of data_tensor)
+      for i in range(31):
+          vector = np.roll(vector,12) # 12 comes from (400/31 = 12.9)
+          data_tensor = np.vstack((data_tensor,vector))
+          
+      return data_tensor
+  else:
+      print('Cannot find data file')
+      return -1
+      
 
 def KPP_DAT(data_dir, param=None):
   npdata = np.load(data_dir)
@@ -190,6 +212,10 @@ class POD_DATASET(Dataset):
             self.domain_len = self.shape[1]*self.shape[2]
             self.domain_shape = self.shape[1:]
             self.spatial_modes, self.data, self.lv, self.h = PODKPP(self.data, args.tstart, args.tstop, args.modes)
+        elif args.dataset == 'FIB':
+            self.domain_len = self.shape[1]
+            self.domain_shape = self.shape[1]
+            self.spatial_modes, self.data, self.lv, self.flux = PODFIBER(self.data, args.tstart, args.tstop, args.modes) #modes-eigenvals of data matrix
 
     def reconstruct(self):
       self.data_recon = pod_mode_to_true(self,self.data,self.args)
@@ -203,6 +229,8 @@ class POD_DATASET(Dataset):
             np.savez(file_str,[self.args,self.spatial_modes,self.data,self.lv,self.rho_flux,self.v_flux,self.e_flux],dtype=object)
         elif args.dataset == 'KPP':
             np.savez(file_str,[self.args,self.spatial_modes,self.data,self.lv,self.h],dtype=object)
+        elif args.dataset == 'FIB':
+            np.savez(file_str,[self.args,self.spatial_modes,self.data,self.lv,self.flux],dtype=object)
         return 1
 
     def load_file(self,file_str):
@@ -214,6 +242,8 @@ class POD_DATASET(Dataset):
             self.args,self.spatial_modes,self.data,self.lv,self.rho_flux,self.v_flux,self.e_flux = np.load(file_str,allow_pickle=True)['arr_0']
         elif args.dataset == 'KPP':
             self.args,self.spatial_modes,self.data,self.lv,self.h = np.load(file_str,allow_pickle=True)['arr_0']
+        elif args.dataset == 'FIB':
+            self.args,self.spatial_modes,self.data,self.lv,self.flux = np.load(file_str,allow_pickle=True)['arr_0']
         return 1
                 
     def _set_shapes(self):
@@ -230,6 +260,9 @@ class POD_DATASET(Dataset):
             self.component_len = 1
             self.domain_len = self.shape[1]*self.shape[2]
             self.domain_shape = self.shape[1:]
+        elif args.dataset == 'FIBER':
+            #handle this later
+            return -1
         return 1
 
     def __len__(self):
