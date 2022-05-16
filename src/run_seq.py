@@ -9,6 +9,7 @@ from tqdm import tqdm,trange
 
 import sys
 sys.path.append('./')
+sys.path.append('../')
 
 from lib.datasets import SEQ_DATASET
 from lib.decomp.pod import pod_mode_to_true
@@ -27,25 +28,26 @@ from lib.vis.reconstruct import data_reconstruct
 parser = argparse.ArgumentParser(prefix_chars='-+/',
     description='[NODE] NODE parameters.')
 data_parser = parser.add_argument_group('Data Parameters')
-data_parser.add_argument('--dataset', type=str, default='VKS',
-                    help='Dataset types: [VKS, EE].')
-data_parser.add_argument('--data_dir', type=str, default='./data/VKS.pkl',
+data_parser.add_argument('--dataset', type=str, default='FIB',
+                    help='Dataset types: [VKS, EE, FIB].')
+data_parser.add_argument('--data_dir', type=str, default='../data/out_pde.dat',
                     help='Directory of data from cwd: sci.')
 data_parser.add_argument('--load_file', type=str,
-                    default='./out/nonT_pred/pth/vks_100_200_pod_8.npz',
+                    #default='./out/nonT_pred/pth/vks_100_200_pod_8.npz',
+                    default = './out/full/pth/fib_0_63_pod_8.npz',
                     help='Directory of pod data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred',
                     help='Directory of output from cwd: sci.')
-data_parser.add_argument('--tr_ind', type=int, default=80,
+data_parser.add_argument('--tr_ind', type=int, default=20,
                 help='Time index for validation data.' )
-data_parser.add_argument('--val_ind', type=int, default=100,
+data_parser.add_argument('--val_ind', type=int, default=40,
                 help='Time index for validation data.' )
 model_params = parser.add_argument_group('Model Parameters')
 model_params.add_argument('--model', type=str, default='HBNODE',
                     help='Model choices - GHBNODE, HBNODE, NODE.')
 model_params.add_argument('--batch_size', type=int, default=20,
                 help='Time index for validation data.' )
-model_params.add_argument('--seq_ind', type=int, default=9,
+model_params.add_argument('--seq_ind', type=int, default=4,
                 help='Time index for validation data.' )
 model_params.add_argument('--layers', type = int, default=12,
                     help = 'Number of hidden layers.')
@@ -178,7 +180,7 @@ for epoch in epochs:
         torch.save(model, args.out_dir+'/pth/{}.mdl'.format(args.model))
         rec.writecsv(args.out_dir+'/pth/{}.csv'.format(args.model))
 
-
+   
 print("Generating Output ... ")
 rec_file = args.out_dir+ './pth/'+args.model+'.csv'
 rec.writecsv(rec_file)

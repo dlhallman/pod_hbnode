@@ -33,26 +33,31 @@ def FIB_DAT(data_dir, param=None):
     # The transient data is contained in out_pde.dat
     # The non-transient, steady-state data is contained in tws_ode.dat
     
-    # TODO: automate this code to handle other time and spatial resolutions
+    # This data requires us to load out_pde.dat and then tws_ode.dat and glue them together
+    # run_pod.py should be run with '--load_file' = '../data/out_pde.dat' and then
+    # ../data/tws_ode.dat will be automatically run after and all the data gets glued together here
   
-  if 'out_pde' in data_dir:    
-      data = pd.read_table(data_dir, sep="\t", index_col=2, names=["x", "h"]).to_numpy()
-      end = data.shape[0]//401
-      return data[:,1].reshape(end,401)
-  elif 'tws_ode' in data_dir: 
-      raw_data = np.loadtxt(data_dir)
-      vector = raw_data[:,1]
-      data_tensor = vector
-      
-      # Create moving wave (down the rows of data_tensor)
-      for i in range(31):
-          vector = np.roll(vector,12) # 12 comes from (400/31 = 12.9)
-          data_tensor = np.vstack((data_tensor,vector))
-          
-      return data_tensor
-  else:
-      print('Cannot find data file')
-      return -1
+    # non-transient data from out_pde.dat
+    data_transient = pd.read_table(data_dir, sep="\t", index_col=2, names=["x", "h"]).to_numpy()
+    end = data_transient.shape[0]//401
+    data_transient = data_transient[:,1].reshape(end,401)
+    data_transient = np.delete(data_transient,400,1) # Temporary - delete last column so that it is the same shape as the tws data
+
+    # transient labels from tws_ode.dat
+    data_dir = '../data/tws_ode.dat'
+    raw_data = np.loadtxt(data_dir)
+    vector = raw_data[:,1]
+    vector = np.roll(raw_data[:,1],35)-0.7 # This contains the main traveling wave solution which is all we need
+    data_nonT = vector
+    
+    # Create moving wave (down the rows of data_tensor)
+    for i in range(31):
+        vector = np.roll(vector,30)
+        data_nonT = np.vstack((data_nonT,vector))
+        
+    data_tensor = np.vstack((data_transient,data_nonT))    
+    return data_tensor
+
       
 
 def KPP_DAT(data_dir, param=None):

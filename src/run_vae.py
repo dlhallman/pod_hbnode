@@ -35,16 +35,16 @@ data_parser.add_argument('--load_file', type=str,
                     help='Directory of pod data from cwd: sci.')
 data_parser.add_argument('--out_dir', type=str, default='./out/nonT_pred/',
                     help='Directory of output from cwd: sci.')
-data_parser.add_argument('--tr_ind', type = int, default=10,
+data_parser.add_argument('--tr_ind', type = int, default=22,
                     help='Time index for training data.')
-data_parser.add_argument('--val_ind', type=int, default=15,
+data_parser.add_argument('--val_ind', type=int, default=31,
                     help='Time index for validation data.' )
 data_parser.add_argument('--eval_ind', type=int, default=31,
                     help='Time index for evaluation data.' )
 model_parser = parser.add_argument_group('Model Parameters')
 model_parser.add_argument('--model', type=str, default='HBNODE',
                     help='Dataset types: [NODE , HBNODE].')
-model_parser.add_argument('--epochs', type=int, default=200,
+model_parser.add_argument('--epochs', type=int, default=2000,
                     help='Training epochs.')
 model_parser.add_argument('--latent_dim', type=int, default=6,
                     help = 'Size of latent dimension')
