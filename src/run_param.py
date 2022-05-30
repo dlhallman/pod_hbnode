@@ -10,6 +10,7 @@ warnings.filterwarnings('ignore')
 #PATH
 import sys
 sys.path.append('./')
+sys.path.append('../')
 
 #SELF IMPORTS
 from lib.datasets import * 
@@ -23,9 +24,9 @@ parser = argparse.ArgumentParser(prefix_chars='-+/',
 data_parser = parser.add_argument_group('Data Parameters')
 data_parser.add_argument('--dataset', type=str, default='EE',
                   help='Dataset types: [EE].')
-data_parser.add_argument('--data_dir', type=str, default='data/EulerEqs.npz',
+data_parser.add_argument('--data_dir', type=str, default='../data/EulerEqs.npz',
                   help='Directory of data from cwd: sci.')
-data_parser.add_argument('--out_dir', type=str, default='./out/ee/',
+data_parser.add_argument('--out_dir', type=str, default='../out/ee/',
                   help='Directory of output from cwd: sci.')
 data_parser.add_argument('--modes', type = int, default = 4,
                   help = 'POD reduction modes.')
