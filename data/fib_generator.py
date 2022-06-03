@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import torch
 
 #SELF IMPORTS
 import sys
@@ -55,8 +56,18 @@ for filename1 in os.listdir(directory):
                 FIB_DAT(out_data_dir, tws_data_dir)
             
 
+# Next, load all the full datasets and concatenate them into a giant data tensor
+data_list = []
+for filename3 in os.listdir(directory):
+    if 'full' in filename3:
+        filepath = os.path.join(directory,filename3)
+        array_temp = np.load(filepath,allow_pickle=True)['arr_0']
+        data_list.append(array_temp)
 
-
+fiber_param = np.stack(data_list,axis=0)
+fileout = os.path.join(directory, 'fiber_param')
+np.savez(fileout, fiber_param)
+    
 
 
 

@@ -22,23 +22,23 @@ from lib.vis.modes import *
 parser = argparse.ArgumentParser(prefix_chars='-+/',
                   description='[PARAMTERIZED] PARAMETERIZED parameters.')
 data_parser = parser.add_argument_group('Data Parameters')
-data_parser.add_argument('--dataset', type=str, default='EE',
+data_parser.add_argument('--dataset', type=str, default='FIB',
                   help='Dataset types: [EE].')
-data_parser.add_argument('--data_dir', type=str, default='../data/EulerEqs.npz',
+data_parser.add_argument('--data_dir', type=str, default='../data/fiber_param.npz',
                   help='Directory of data from cwd: sci.')
-data_parser.add_argument('--out_dir', type=str, default='../out/ee/',
+data_parser.add_argument('--out_dir', type=str, default='../out/fib/',
                   help='Directory of output from cwd: sci.')
 data_parser.add_argument('--modes', type = int, default = 4,
                   help = 'POD reduction modes.')
 data_parser.add_argument('--tstart', type = int, default=0,
                   help='Start time for reduction along time axis.')
-data_parser.add_argument('--tstop', type=int, default=181,
+data_parser.add_argument('--tstop', type=int, default=183,
                   help='Stop time for reduction along time axis.' )
 data_parser.add_argument('--batch_size', type=int, default=200,
               help='Time index for validation data.' )
 data_parser.add_argument('--tr_ind', type=int, default=150,
               help='Time index for data and label separation.' )
-data_parser.add_argument('--param_ind', type=int, default=90,
+data_parser.add_argument('--param_ind', type=int, default=15,
               help='Param index for validation data.' )
 model_params = parser.add_argument_group('Model Parameters')
 model_params.add_argument('--model', type=str, default='NODE',

@@ -74,6 +74,11 @@ def EE_PARAM(data_dir):
   rho, u, E, x, params, t = npzdata['arr_0'], npzdata['arr_1'], npzdata['arr_2'], npzdata['arr_3'], npzdata['arr_4'], npzdata['arr_5']
   ee = np.array([rho, u, E], dtype=np.double)
   return ee.T
+
+def FIB_PARAM(data_dir):
+    npzdata = np.load(data_dir)['arr_0']
+    return npzdata
+
 LOADERS = {'VKS':VKS_DAT, 'EE': EE_DAT, 'FIB' : FIB_DAT, 'KPP': KPP_DAT}
 
 
@@ -369,80 +374,129 @@ class PARAM_DATASET:
 
     def __init__(self, args):
         
-        assert args.dataset == "EE"
-        self.args = args
-
-        print('Loading ... \t Dataset: {}'.format(args.dataset))
-        self.data_init = EE_PARAM(args.data_dir)
-        self.data = self.data_init
-        self.num_params = self.data_init.shape[0]
-        self.shape = self.data_init.shape[1:]
-        self.time_len = self.shape[1]
-
-        args.tstop = min(args.tstop, self.data.shape[1]+args.tstart-1)
-        
-        self.reduce()
-
-        self.data = np.moveaxis(self.data,0,1)
-        self.mean_data = self.data.mean(axis=0)
-        self.std_data = self.data.std(axis=0)
-        self.data = (self.data - self.mean_data) / self.std_data
-        self.data = np.moveaxis(self.data,1,0) 
-
-        #SEQUENCE DATA
-        train_size = args.param_ind
-        self.data_shuffled = self.data
-        np.random.shuffle(self.data_shuffled)
-        train =self.data_shuffled[:train_size]
-        valid =self.data_shuffled[train_size:]
-        train = np.moveaxis(train,0,1)
-        self.label_len = train.shape[0]-args.tr_ind
-        train_data = train[:args.tr_ind]
-        train_label = train[-args.tr_ind:]
-        valid = np.moveaxis(valid,0,1)
-        valid_data = valid[:args.tr_ind]
-        valid_label = valid[-args.tr_ind:]
-
-        train_data = torch.FloatTensor(train_data)
-        train_label = torch.FloatTensor(train_label)
-        valid_data = torch.FloatTensor(valid_data)
-        valid_label = torch.FloatTensor(valid_label)
-        print(train_data.shape,train_label.shape)
-
-        #padd = max(train_data.shape[0],train_label.shape[0])
-        #data_pad = padd-train_data.shape[0]
-        #label_pad = padd-train_label.shape[0]
-        #self.data_pad = data_pad
-        #self.label_pad = label_pad
-        #data_padding = nn.ReflectionPad1d((0,train_data.shape[0]-1))
-        #label_padding = nn.ReflectionPad1d((0,train_label.shape[0]-1))
-
-        #train_data = data_padding(train_data)
-        #valid_data = data_padding(valid_data)
-        #while train_data.shape[0]<train_label.shape[0]:
-          #train_data = data_padding(train_data.T).T
-          #valid_data = data_padding(valid_data.T).T
-        #while train_label.shape[0]<train_data.shape[0]:
-          #train_label = label_padding(train_label.T).T
-          #valid_label = label_padding(valid_label.T).T
-
-        #train_data=train_data[:padd]
-        #train_label=train_label[:padd]
-        #valid_data=valid_data[:padd]
-        #valid_label=valid_label[:padd]
-        #train_data = nn.functional.pad(train_data,(0,0,0,0,0,label_pad))
-        #train_label = nn.functional.pad(train_label,(0,0,0,0,0,label_pad))
-        #valid_data = nn.functional.pad(valid_data,(0,0,0,0,0,data_pad))
-        #valid_label = nn.functional.pad(valid_label,(0,0,0,0,0,label_pad))
-        
-
-        self.train_data = torch.FloatTensor(train_data).to(args.device)
-        self.train_label = torch.FloatTensor(train_label).to(args.device)
-        self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[0]).to(args.device)
-
-        self.valid_data =  torch.FloatTensor(valid_data).to(args.device)
-        self.valid_label = torch.FloatTensor(valid_label).to(args.device)
-        self.valid_times = (torch.ones(valid_data.shape[:-1])/valid_data.shape[0]).to(args.device)
+        if args.dataset == 'EE':
+            self.args = args
+    
+            print('Loading ... \t Dataset: {}'.format(args.dataset))
+            self.data_init = EE_PARAM(args.data_dir)
+            self.data = self.data_init
+            self.num_params = self.data_init.shape[0]
+            self.shape = self.data_init.shape[1:]
+            self.time_len = self.shape[1]   # This is wrong!!!! This is the spatial grid!
+    
+            args.tstop = min(args.tstop, self.data.shape[1]+args.tstart-1)
+            
+            self.reduce()
+    
+            self.data = np.moveaxis(self.data,0,1)
+            self.mean_data = self.data.mean(axis=0)
+            self.std_data = self.data.std(axis=0)
+            self.data = (self.data - self.mean_data) / self.std_data
+            self.data = np.moveaxis(self.data,1,0) 
+    
+            #SEQUENCE DATA
+            train_size = args.param_ind
+            self.data_shuffled = self.data
+            np.random.shuffle(self.data_shuffled)
+            train =self.data_shuffled[:train_size]
+            valid =self.data_shuffled[train_size:]
+            train = np.moveaxis(train,0,1)
+            self.label_len = train.shape[0]-args.tr_ind
+            train_data = train[:args.tr_ind]
+            train_label = train[-args.tr_ind:]
+            valid = np.moveaxis(valid,0,1)
+            valid_data = valid[:args.tr_ind]
+            valid_label = valid[-args.tr_ind:]
+    
+            train_data = torch.FloatTensor(train_data)
+            train_label = torch.FloatTensor(train_label)
+            valid_data = torch.FloatTensor(valid_data)
+            valid_label = torch.FloatTensor(valid_label)
+            print(train_data.shape,train_label.shape)
+    
+            #padd = max(train_data.shape[0],train_label.shape[0])
+            #data_pad = padd-train_data.shape[0]
+            #label_pad = padd-train_label.shape[0]
+            #self.data_pad = data_pad
+            #self.label_pad = label_pad
+            #data_padding = nn.ReflectionPad1d((0,train_data.shape[0]-1))
+            #label_padding = nn.ReflectionPad1d((0,train_label.shape[0]-1))
+    
+            #train_data = data_padding(train_data)
+            #valid_data = data_padding(valid_data)
+            #while train_data.shape[0]<train_label.shape[0]:
+              #train_data = data_padding(train_data.T).T
+              #valid_data = data_padding(valid_data.T).T
+            #while train_label.shape[0]<train_data.shape[0]:
+              #train_label = label_padding(train_label.T).T
+              #valid_label = label_padding(valid_label.T).T
+    
+            #train_data=train_data[:padd]
+            #train_label=train_label[:padd]
+            #valid_data=valid_data[:padd]
+            #valid_label=valid_label[:padd]
+            #train_data = nn.functional.pad(train_data,(0,0,0,0,0,label_pad))
+            #train_label = nn.functional.pad(train_label,(0,0,0,0,0,label_pad))
+            #valid_data = nn.functional.pad(valid_data,(0,0,0,0,0,data_pad))
+            #valid_label = nn.functional.pad(valid_label,(0,0,0,0,0,label_pad))
+            
+    
+            self.train_data = torch.FloatTensor(train_data).to(args.device)
+            self.train_label = torch.FloatTensor(train_label).to(args.device)
+            self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[0]).to(args.device)
+    
+            self.valid_data =  torch.FloatTensor(valid_data).to(args.device)
+            self.valid_label = torch.FloatTensor(valid_label).to(args.device)
+            self.valid_times = (torch.ones(valid_data.shape[:-1])/valid_data.shape[0]).to(args.device)
+            
+            
+        elif args.dataset == 'FIB':
+            self.args = args
+    
+            print('Loading ... \t Dataset: {}'.format(args.dataset))
+            self.data_init = FIB_PARAM(args.data_dir)
+            self.data = self.data_init
+            self.num_params = self.data_init.shape[0]
+            self.shape = self.data_init.shape[1:]
+            self.time_len = self.shape[0]
+    
+            args.tstop = min(args.tstop, self.data.shape[1]+args.tstart-1)
+            
+            self.fib_reduce()
+    
+            self.data = np.moveaxis(self.data,0,1)
+            self.mean_data = self.data.mean(axis=0)
+            self.std_data = self.data.std(axis=0)
+            self.data = (self.data - self.mean_data) / self.std_data
+            self.data = np.moveaxis(self.data,1,0) 
+    
+            #SEQUENCE DATA
+            train_size = args.param_ind
+            self.data_shuffled = self.data
+            np.random.shuffle(self.data_shuffled)
+            train =self.data_shuffled[:train_size]
+            valid =self.data_shuffled[train_size:]
+            train = np.moveaxis(train,0,1)
+            self.label_len = train.shape[0]-args.tr_ind
+            train_data = train[:args.tr_ind]
+            train_label = train[-args.tr_ind:] # I don't understand this part...
+            valid = np.moveaxis(valid,0,1)
+            valid_data = valid[:args.tr_ind]
+            valid_label = valid[-args.tr_ind:] # I don't understand this part either
+    
+            train_data = torch.FloatTensor(train_data)
+            train_label = torch.FloatTensor(train_label)
+            valid_data = torch.FloatTensor(valid_data)
+            valid_label = torch.FloatTensor(valid_label)
+            print(train_data.shape,train_label.shape)            
+    
+            self.train_data = torch.FloatTensor(train_data).to(args.device)
+            self.train_label = torch.FloatTensor(train_label).to(args.device)
+            self.train_times = (torch.ones(train_data.shape[:-1])/train_data.shape[0]).to(args.device)
+    
+            self.valid_data =  torch.FloatTensor(valid_data).to(args.device)
+            self.valid_label = torch.FloatTensor(valid_label).to(args.device)
+            self.valid_times = (torch.ones(valid_data.shape[:-1])/valid_data.shape[0]).to(args.device)
 
     """POD Model Reduction"""
     def reduce(self):
@@ -471,6 +525,29 @@ class PARAM_DATASET:
         self.rho_flux = np.array(Rho_flux)
         self.v_flux = np.array(V_flux)
         self.e_flux = np.array(E_flux)
+        avg=avg/i
+        print('Average Relative information value is:',avg)
+        
+    def fib_reduce(self):
+        avg=0
+        args = self.args
+        Spatial_modes=[]
+        Data=[]
+        Lv=[]
+        Height_flux=[]
+        for i,dat in enumerate(self.data):
+            spatial_modes,temp,lv, height_flux = PODFIBER(dat, args.tstart, args.tstop, args.modes)
+            Spatial_modes=Spatial_modes+[spatial_modes]
+            Data=Data+[temp]
+            Lv=Lv+[lv]
+            #avg = avg + sum(lv[:8])/sum(lv)   
+            Height_flux=Height_flux+[height_flux]
+            avg = sum(lv[:args.modes])/sum(lv) + avg  # Why do we have two evaluations of avg???
+        if args.verbose: print('Avergage relative information content:',avg/self.data.shape[0])
+        self.spatial_modes = np.array(Spatial_modes)
+        self.data = np.array(Data)
+        self.lv = np.array(Lv)
+        self.height_flux = np.array(Height_flux)
         avg=avg/i
         print('Average Relative information value is:',avg)
 
