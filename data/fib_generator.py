@@ -28,7 +28,7 @@ def FIB_DAT(out_data_dir, tws_data_dir, param=None):
     data_nonT = vector
     
     # Create moving wave (down the rows of data_tensor)
-    for i in range(31):
+    for i in range(150):
         vector = np.roll(vector,30)
         data_nonT = np.vstack((data_nonT,vector))
         

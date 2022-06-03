@@ -32,11 +32,11 @@ data_parser.add_argument('--modes', type = int, default = 4,
                   help = 'POD reduction modes.')
 data_parser.add_argument('--tstart', type = int, default=0,
                   help='Start time for reduction along time axis.')
-data_parser.add_argument('--tstop', type=int, default=183,
+data_parser.add_argument('--tstop', type=int, default=302,
                   help='Stop time for reduction along time axis.' )
 data_parser.add_argument('--batch_size', type=int, default=200,
               help='Time index for validation data.' )
-data_parser.add_argument('--tr_ind', type=int, default=150,
+data_parser.add_argument('--tr_ind', type=int, default=151,
               help='Time index for data and label separation.' )
 data_parser.add_argument('--param_ind', type=int, default=15,
               help='Param index for validation data.' )
