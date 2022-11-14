@@ -29,6 +29,8 @@ def EE_DAT(data_dir, param=0):
   return ee
 
 def FIB_DAT(data_dir, param=None):
+    
+    """ This code is outdated, since fib_generator.py handles all of this """
     # There are two data types for the fiber dataset. 
     # The transient data is contained in out_pde.dat
     # The non-transient, steady-state data is contained in tws_ode.dat
@@ -38,24 +40,27 @@ def FIB_DAT(data_dir, param=None):
     # ../data/tws_ode.dat will be automatically run after and all the data gets glued together here
   
     # non-transient data from out_pde.dat
-    data_transient = pd.read_table(data_dir, sep="\t", index_col=2, names=["x", "h"]).to_numpy()
-    end = data_transient.shape[0]//401
-    data_transient = data_transient[:,1].reshape(end,401)
-    data_transient = np.delete(data_transient,400,1) # Temporary - delete last column so that it is the same shape as the tws data
+    # data_transient = pd.read_table(data_dir, sep="\t", index_col=2, names=["x", "h"]).to_numpy()
+    # end = data_transient.shape[0]//401
+    # data_transient = data_transient[:,1].reshape(end,401)
+    # data_transient = np.delete(data_transient,400,1) # Temporary - delete last column so that it is the same shape as the tws data
 
-    # transient labels from tws_ode.dat
-    data_dir = '../data/tws_ode.dat'
-    raw_data = np.loadtxt(data_dir)
-    vector = raw_data[:,1]
-    vector = np.roll(raw_data[:,1],35)-0.7 # This contains the main traveling wave solution which is all we need
-    data_nonT = vector
+    # # transient labels from tws_ode.dat
+    # data_dir = '../data/tws_ode.dat'
+    # raw_data = np.loadtxt(data_dir)
+    # vector = raw_data[:,1]
+    # vector = np.roll(raw_data[:,1],35)-0.7 # This contains the main traveling wave solution which is all we need
+    # data_nonT = vector
     
-    # Create moving wave (down the rows of data_tensor)
-    for i in range(31):
-        vector = np.roll(vector,30)
-        data_nonT = np.vstack((data_nonT,vector))
+    # # Create moving wave (down the rows of data_tensor)
+    # for i in range(31):
+    #     vector = np.roll(vector,30)
+    #     data_nonT = np.vstack((data_nonT,vector))
         
-    data_tensor = np.vstack((data_transient,data_nonT))    
+    # data_tensor = np.vstack((data_transient,data_nonT))  
+    
+    data_tensor = np.load(data_dir, allow_pickle=True)['arr_0']
+    
     return data_tensor
 
       
@@ -202,7 +207,8 @@ class POD_DATASET(Dataset):
             self._set_shapes()
 
         args = self.args
-        args.tstop = min(args.tstop,self.data_init.shape[0])
+        #args.tstop = min(args.tstop,self.data_init.shape[0])
+        args.tstop = self.data_init.shape[0]
 
     def reduce(self):
         args = self.args
@@ -225,7 +231,7 @@ class POD_DATASET(Dataset):
         elif args.dataset == 'FIB':
             self.domain_len = self.shape[1]
             self.domain_shape = self.shape[1]
-            self.spatial_modes, self.data, self.lv, self.flux = PODFIBER(self.data, args.tstart, args.tstop, args.modes) #modes-eigenvals of data matrix
+            self.spatial_modes, self.data, self.lv, self.flux = PODFIBER(self.data, args.tstart, args.tstop, args.modes, False) #modes-eigenvals of data matrix
 
     def reconstruct(self):
       self.data_recon = pod_mode_to_true(self,self.data,self.args)
@@ -288,6 +294,10 @@ class VAE_DATASET():
     def __init__(self, args):
     
         self.pod_dataset = POD_DATASET(args)
+        
+        # Adding this here!!! I think this part is necessary but not sure
+        self.pod_dataset.reduce();
+        
         self.data = self.pod_dataset.data
         self.data_args = self.pod_dataset.args
 
@@ -312,9 +322,9 @@ class VAE_DATASET():
         self.data_eval = self.data[args.val_ind:args.eval_ind, :]
 
         #INVERT OVER TIME
-        idx = [i for i in range(self.train_data.size(0) - 1, -1, -1)]
+        idx = [i for i in range(self.train_data.size(1) - 1, -1, -1)]
         idx = torch.LongTensor(idx)
-        self.obs_t = self.train_data.index_select(0, idx)
+        self.obs_t = self.train_data.index_select(1, idx)
 
         #NORMALIZE TIME
         eval_times = np.linspace(0, 1, args.eval_ind)
@@ -393,6 +403,8 @@ class PARAM_DATASET:
             self.std_data = self.data.std(axis=0)
             self.data = (self.data - self.mean_data) / self.std_data
             self.data = np.moveaxis(self.data,1,0) 
+            
+           
     
             #SEQUENCE DATA
             train_size = args.param_ind
@@ -460,7 +472,7 @@ class PARAM_DATASET:
             self.shape = self.data_init.shape[1:]
             self.time_len = self.shape[0]
     
-            args.tstop = min(args.tstop, self.data.shape[1]+args.tstart-1)
+            #args.tstop = min(args.tstop, self.data.shape[1]+args.tstart-1)
             
             self.fib_reduce()
     
@@ -469,6 +481,17 @@ class PARAM_DATASET:
             self.std_data = self.data.std(axis=0)
             self.data = (self.data - self.mean_data) / self.std_data
             self.data = np.moveaxis(self.data,1,0) 
+            
+            # Visualize everything
+            # for i in range(96):
+            #     fig, axes = plt.subplots(2,3,tight_layout=True)
+            #     axes[0,0].plot(self.data[i,:,0])
+            #     axes[0,1].plot(self.data[i,:,1])
+            #     axes[0,2].plot(self.data[i,:,2])
+            #     axes[1,0].plot(self.data[i,:,3])
+            #     axes[1,1].plot(self.data[i,:,4])
+            #     axes[1,2].plot(self.data[i,:,5])
+            
     
             #SEQUENCE DATA
             train_size = args.param_ind
@@ -479,10 +502,10 @@ class PARAM_DATASET:
             train = np.moveaxis(train,0,1)
             self.label_len = train.shape[0]-args.tr_ind
             train_data = train[:args.tr_ind]
-            train_label = train[-args.tr_ind:] # I don't understand this part...
+            train_label = train[-args.tr_ind:] 
             valid = np.moveaxis(valid,0,1)
             valid_data = valid[:args.tr_ind]
-            valid_label = valid[-args.tr_ind:] # I don't understand this part either
+            valid_label = valid[-args.tr_ind:]
     
             train_data = torch.FloatTensor(train_data)
             train_label = torch.FloatTensor(train_label)
@@ -536,7 +559,7 @@ class PARAM_DATASET:
         Lv=[]
         Height_flux=[]
         for i,dat in enumerate(self.data):
-            spatial_modes,temp,lv, height_flux = PODFIBER(dat, args.tstart, args.tstop, args.modes)
+            spatial_modes,temp,lv, height_flux = PODFIBER(dat, args.tstart, args.tstop, args.modes,False)
             Spatial_modes=Spatial_modes+[spatial_modes]
             Data=Data+[temp]
             Lv=Lv+[lv]

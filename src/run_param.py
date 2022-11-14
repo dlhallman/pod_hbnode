@@ -5,6 +5,8 @@ import torch
 import torch.nn as nn
 from tqdm import trange
 import warnings
+import random
+import matplotlib.pyplot as plt
 warnings.filterwarnings('ignore')
 
 #PATH
@@ -18,35 +20,36 @@ from lib.models.param import *
 from lib.utils.misc import set_outdir,set_seed, Recorder
 from lib.vis.model import *
 from lib.vis.modes import *
+from lib.vis.animate import *
 
 parser = argparse.ArgumentParser(prefix_chars='-+/',
                   description='[PARAMTERIZED] PARAMETERIZED parameters.')
 data_parser = parser.add_argument_group('Data Parameters')
 data_parser.add_argument('--dataset', type=str, default='FIB',
                   help='Dataset types: [EE].')
-data_parser.add_argument('--data_dir', type=str, default='../data/fiber_param.npz',
+data_parser.add_argument('--data_dir', type=str, default='../data/FIB.npz',
                   help='Directory of data from cwd: sci.')
-data_parser.add_argument('--out_dir', type=str, default='../out/fib/',
-                  help='Directory of output from cwd: sci.')
+data_parser.add_argument('--out_dir', type=str, default='./out/fib/',
+                  help='Directory of output from cwd: sci. SAVES TO JUSTIN/PODHBNODE/SRC/OUT')
 data_parser.add_argument('--modes', type = int, default = 4,
                   help = 'POD reduction modes.')
 data_parser.add_argument('--tstart', type = int, default=0,
                   help='Start time for reduction along time axis.')
 data_parser.add_argument('--tstop', type=int, default=302,
                   help='Stop time for reduction along time axis.' )
-data_parser.add_argument('--batch_size', type=int, default=200,
+data_parser.add_argument('--batch_size', type=int, default=10,
               help='Time index for validation data.' )
 data_parser.add_argument('--tr_ind', type=int, default=151,
               help='Time index for data and label separation.' )
-data_parser.add_argument('--param_ind', type=int, default=15,
-              help='Param index for validation data.' )
+data_parser.add_argument('--param_ind', type=int, default=150,
+              help='Param index for validation data. HOW MANY PARAMETERS FOR TRAINING'  )
 model_params = parser.add_argument_group('Model Parameters')
-model_params.add_argument('--model', type=str, default='NODE',
+model_params.add_argument('--model', type=str, default='HBNODE',
                   help='Model choices - GHBNODE, HBNODE, NODE.')
 model_params.add_argument('--corr', type=int, default=-100,
                   help='Skip gate input into soft max function.')
 train_params = parser.add_argument_group('Training Parameters')
-train_params.add_argument('--epochs', type=int, default=100,
+train_params.add_argument('--epochs', type=int, default=30,
                   help='Training epochs.')
 train_params.add_argument('--layers', type=int, default=2,
               help='Encoder Layers.')
@@ -80,6 +83,13 @@ set_outdir(args.out_dir, args)
 
 #DATA LOADER
 param = PARAM_DATASET(args)
+
+# Check out an animation of the data - random parameters
+samples = random.sample(range(0,len(param.data_init)),4)
+mofo = param.data_init[[1,2,93,94],:,:]
+# data_animation(mofo,args)
+print('Done animating')
+
 
 MODELS = {'NODE' : NMODEL(args),'HBNODE' : HBMODEL(args, res=True, cont=True), 'GHBNODE' : GHBMODEL(args, res=True, cont=True)}
 
@@ -191,12 +201,13 @@ verts = [args.tstart+args.tr_ind]
 true = np.moveaxis(param.data.copy(),0,1)
 mode_prediction(data[:,args.param_ind+2,:4],data_true[:,args.param_ind+2,:4],times,verts,args,'_val')
 mode_prediction(data[:,0,:4],data_true[:,0,:4],times,verts,args)
-#val_recon = pod_mode_to_true(param.pod_dataset,normalized,args)
-#data_reconstruct(val_recon,-1,args)
-#data_animation(val_recon,args)
-
+#%%
+val_recon = pod_mode_to_true(param.pod_dataset,normalized,args)
+data_reconstruct(val_recon,-1,args)
+data_animation(val_recon,args)
+#%%
 #MODEL PLOTS
-#plot_loss(rec_file, args)
-#plot_nfe(rec_file,'forward_nfe', args)
-#plot_adjGrad(rec_file, args)
-#plot_stiff(rec_file, args)
+plot_loss(rec_file, args)
+plot_nfe(rec_file,'forward_nfe', args)
+plot_adjGrad(rec_file, args)
+plot_stiff(rec_file, args)

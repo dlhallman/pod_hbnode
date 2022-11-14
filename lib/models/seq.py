@@ -61,8 +61,12 @@ class nodernn(nn.Module):
         super().__init__()
         self.actv = nn.Tanh()
         self.dense1 = nn.Linear(in_channels + nhidden, nhidden * 2)
+        geotorch.orthogonal(self.linear, "weight")
         self.dense2 = nn.Linear(nhidden * 2, nhidden * 2)
         self.dense3 = nn.Linear(nhidden * 2, out_channels)
+        
+
+        
 
     def forward(self, h, x):
         out = torch.cat([h, x], dim=1).to(DEVICE)

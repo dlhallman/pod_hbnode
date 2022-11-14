@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+
+
+
+
+
 ######################
 ##### ANIMATIONS #####
 ######################
@@ -91,7 +96,34 @@ def fiber_animate(data,args):
     ani = animation.FuncAnimation(fig, run_fiber_lines, frames = data.shape[0]-1, blit=False, interval=data.shape[0]-1,
         repeat=False)
     end_str = str(args.dataset+'_'+args.model+'_recon').lower()
-    ani.save(args.out_dir+'/'+end_str+'.gif', "PillowWriter", fps=6)
+    ani.save(args.out_dir+'/'+end_str+'tinkleDick.gif', "PillowWriter", fps=12)
+    return 1
+
+def fiber_param_animate(data, args):
+    plt.style.use('classic')
+
+    fig, axes = plt.subplots(2,2,tight_layout=True)
+    axes[0,0].set_ylim([-0.5,2])
+    axes[0,1].set_ylim([-0.5,2])
+    axes[1,0].set_ylim([-0.5,2])
+    axes[1,1].set_ylim([-0.5,2])
+    x = np.linspace(0,5,data.shape[2])
+    lines1 = axes[0,0].plot(x,np.zeros(data.shape[2]), 'k')
+    lines2 = axes[0,1].plot(x,np.zeros(data.shape[2]), 'k')
+    lines3 = axes[1,0].plot(x,np.zeros(data.shape[2]), 'k')
+    lines4 = axes[1,1].plot(x,np.zeros(data.shape[2]), 'k')
+    
+    def run_fiber_lines(fiber_t):
+        lines1[0].set_ydata(data[0,fiber_t,:])
+        lines2[0].set_ydata(data[1,fiber_t,:])
+        lines3[0].set_ydata(data[2,fiber_t,:])
+        lines4[0].set_ydata(data[3,fiber_t,:])
+        return lines1, lines2, lines3, lines4
+    
+    ani = animation.FuncAnimation(fig, run_fiber_lines, frames = data.shape[1]-1, blit=False, interval=data.shape[1]-1,
+        repeat=False)
+    end_str = str(args.dataset+'_'+args.model+'_reconSDFSDFSDF').lower()
+    ani.save(args.out_dir+'/'+end_str+'.gif', "PillowWriter", fps=12)
     return 1
 
 

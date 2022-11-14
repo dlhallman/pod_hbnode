@@ -2,6 +2,7 @@
 # Import Packages
 import numpy as np
 import scipy.linalg
+import matplotlib.pyplot as plt
 
 #TODO: Commenting
 
@@ -119,7 +120,7 @@ def PODKPP(data, s_ind, e_ind, modes):
 
     return spatial_modes, temporal_coefficients, eigen_vals, var_flux.copy()
 
-def PODFIBER(data,s_ind,e_ind,modes):
+def PODFIBER(data,s_ind,e_ind,modes,plot):
     """ Computes the spatial modes and temporal coefficients using the POD """
     # There are no parameters/components in this data
 
@@ -138,6 +139,23 @@ def PODFIBER(data,s_ind,e_ind,modes):
 
     spatial_modes = np.matmul(data_flux.T, eigen_vecs[:, :modes]) / np.sqrt(eigen_vals[:modes]) # is this unit norm?
     temporal_coefficients = np.matmul(data_flux, spatial_modes) #"throw sqrt of Lv onto temp_coef"
+    
+    if plot==True:
+        fig, axes = plt.subplots(2,3,tight_layout=True)
+        axes[0,0].plot(spatial_modes[:,0])
+        axes[0,1].plot(spatial_modes[:,1])
+        axes[0,2].plot(spatial_modes[:,2])
+        axes[1,0].plot(spatial_modes[:,3])
+        axes[1,1].plot(spatial_modes[:,4])
+        axes[1,2].plot(spatial_modes[:,5])
+        
+        fig2, axes2 = plt.subplots(2,3,tight_layout=True)
+        axes2[0,0].plot(temporal_coefficients[:,0])
+        axes2[0,1].plot(temporal_coefficients[:,1])
+        axes2[0,2].plot(temporal_coefficients[:,2])
+        axes2[1,0].plot(temporal_coefficients[:,3])
+        axes2[1,1].plot(temporal_coefficients[:,4])
+        axes2[1,2].plot(temporal_coefficients[:,5])
 
     return spatial_modes, temporal_coefficients, eigen_vals, data_flux
 
